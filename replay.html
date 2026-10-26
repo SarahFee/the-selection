@@ -1,0 +1,382 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="The Selection: nine AI models on a fictional world council choose its next leader. An experiment by Sarah Fekih.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>The Selection Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a council table strip (the 9 AIs) above a stage that steps through the 7 phases of one run; a second tab holds the Replit blueprint. */
+:root{
+  --bg:#F3F4F7; --panel:#FFFFFF; --ink:#18213A; --muted:#5B6479; --line:#DCE0E8;
+  --brass:#A97817; --brass-soft:#F4E8CC;
+  --yes:#1F8A4C; --yes-soft:#DDF2E5; --no:#C2412D; --no-soft:#F9E0DB; --nil:#9AA2B2; --nil-soft:#ECEEF2;
+  --v-anthropic:#B4613A; --v-openai:#3B4A6B; --v-google:#2F6FD0; --v-zai:#7A4FC2; --v-moon:#13857E; --v-jev:#A97817;
+  --display:"Young Serif", Georgia, "Times New Roman", serif;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10141F; --panel:#181E2D; --ink:#E7EAF2; --muted:#9AA3B8; --line:#2A3247;
+  --brass:#D9A949; --brass-soft:#3A3020;
+  --yes:#4CC07F; --yes-soft:#16362A; --no:#EE7A63; --no-soft:#3E2220; --nil:#7D879B; --nil-soft:#242B3B;
+  --v-anthropic:#D98A5F; --v-openai:#8FA2CC; --v-google:#6EA3F2; --v-zai:#A988E6; --v-moon:#4CC2B8; --v-jev:#D9A949;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10141F; --panel:#181E2D; --ink:#E7EAF2; --muted:#9AA3B8; --line:#2A3247;
+  --brass:#D9A949; --brass-soft:#3A3020;
+  --yes:#4CC07F; --yes-soft:#16362A; --no:#EE7A63; --no-soft:#3E2220; --nil:#7D879B; --nil-soft:#242B3B;
+  --v-anthropic:#D98A5F; --v-openai:#8FA2CC; --v-google:#6EA3F2; --v-zai:#A988E6; --v-moon:#4CC2B8; --v-jev:#D9A949;
+  color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px;display:flex;flex-direction:column;gap:18px}
+h1,h2,h3{font-family:var(--display);font-weight:400;text-wrap:balance;margin:0;line-height:1.15}
+h1{font-size:clamp(28px,4.4vw,40px)}
+h2{font-size:22px}
+h3{font-size:17px}
+p{margin:0}
+.eyebrow{font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,select:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:12px}
+header.top .lede{max-width:60ch;color:var(--muted);margin-top:6px}
+.tabs{display:flex;gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px}
+.tabs button{border:0;background:transparent;padding:7px 14px;border-radius:999px;font-weight:600;font-size:14px;color:var(--muted)}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--bg)}
+
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+
+/* run picker */
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.runs{display:flex;flex-wrap:wrap;gap:6px}
+.runs button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--panel);font-family:var(--mono);font-weight:700;font-size:13px;position:relative}
+.runs button[aria-pressed="true"]{border-color:var(--brass);background:var(--brass-soft)}
+.runs button .dot{position:absolute;right:3px;top:3px;width:6px;height:6px;border-radius:50%}
+
+/* the table: 9 AIs */
+.table{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:8px}
+.seat{display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-width:0}
+.av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:var(--mono);font-weight:700;font-size:12px;position:relative;flex:none}
+.av.sm{width:30px;height:30px;font-size:10px}
+.av .shield{position:absolute;bottom:-4px;right:-6px;background:var(--panel);border-radius:50%;font-size:13px;line-height:1;padding:2px}
+.seat .nm{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.seat .vd{font-size:10.5px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:var(--muted);margin-top:12px}
+
+/* candidates */
+.cands{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:8px}
+.cand{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px;padding:8px 4px;border-radius:10px;border:1px solid var(--line);min-width:0;transition:opacity .3s}
+.cand .em{font-size:22px;line-height:1.2}
+.cand .lb{font-size:12px;font-weight:600;line-height:1.2}
+.cand.out{opacity:.35}
+.cand.out .lb{text-decoration:line-through}
+.cand.win{border-color:var(--brass);background:var(--brass-soft)}
+
+/* stage */
+.stage{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px;align-items:start}
+.steps{display:flex;flex-direction:column;gap:4px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+.steps button{display:flex;align-items:center;gap:10px;border:1px solid transparent;background:transparent;padding:8px 10px;border-radius:10px;text-align:left;font-size:14px}
+.steps button .k{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;border:1px solid var(--line);flex:none;background:var(--panel)}
+.steps button[aria-current="step"]{background:var(--panel);border-color:var(--line);font-weight:600}
+.steps button[aria-current="step"] .k{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.steps button.done .k{background:var(--nil-soft)}
+.view{display:flex;flex-direction:column;gap:14px;min-width:0}
+.viewhead{display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap}
+.nav{display:flex;gap:8px}
+.nav button{border:1px solid var(--line);background:var(--panel);padding:8px 14px;border-radius:10px;font-weight:600}
+.nav button.primary{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.nav button:disabled{opacity:.4;cursor:default}
+.explain{background:var(--brass-soft);border-radius:10px;padding:10px 12px;font-size:14px}
+
+/* chat */
+.feed{display:flex;flex-direction:column;gap:12px}
+.msg{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px}
+.bubble{background:var(--panel);border:1px solid var(--line);border-radius:4px 14px 14px 14px;padding:10px 12px;min-width:0}
+.bubble .who{font-weight:700;font-size:13.5px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.bubble .who .tag{font-weight:500;font-size:11.5px;color:var(--muted)}
+.bubble p{margin-top:4px;font-size:14.5px}
+.reveal{margin-top:8px;border:0;background:transparent;padding:0;font-size:12.5px;font-weight:600;color:var(--brass)}
+.thought{margin-top:8px;border-left:3px solid var(--brass);padding:6px 10px;font-size:13.5px;background:var(--brass-soft);border-radius:0 8px 8px 0}
+.sys{font-size:13px;color:var(--muted);padding:8px 12px;border:1px dashed var(--line);border-radius:10px}
+details.whispers{border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+details.whispers summary{cursor:pointer;padding:10px 12px;font-weight:600;font-size:14px}
+.wlist{display:flex;flex-direction:column;gap:8px;padding:0 12px 12px}
+.w{font-size:13.5px;padding:8px 10px;border-radius:10px;background:var(--nil-soft)}
+.w .route{font-weight:700;font-size:12.5px;margin-bottom:2px}
+
+/* leaderboard */
+.board{display:flex;flex-direction:column;gap:8px}
+.row{display:grid;grid-template-columns:170px minmax(0,1fr) 112px;gap:12px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.row .c{display:flex;gap:8px;align-items:center;min-width:0}
+.row .c .em{font-size:22px}
+.row .c .lb{font-weight:600;font-size:14px;line-height:1.2}
+.pips{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:4px}
+.pip{height:30px;border-radius:7px;display:grid;place-items:center;font-family:var(--mono);font-size:9.5px;font-weight:700;border:1.5px solid transparent;cursor:default;min-width:0;overflow:hidden}
+.pip.E{background:var(--yes-soft);color:var(--yes)}
+.pip.D{background:var(--no-soft);color:var(--no)}
+.pip.N{background:var(--nil-soft);color:var(--nil)}
+.pip.X{background:repeating-linear-gradient(45deg,var(--nil-soft) 0 4px,transparent 4px 8px);color:var(--nil)}
+.pip.veto{border-color:var(--brass)}
+.tally{display:flex;flex-direction:column;align-items:end;gap:4px}
+.nums{font-family:var(--mono);font-size:13px;font-variant-numeric:tabular-nums;display:flex;gap:8px}
+.nums .y{color:var(--yes)} .nums .n{color:var(--no)} .nums .z{color:var(--nil)}
+.chip{font-size:11.5px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.chip.ok{background:var(--yes-soft);color:var(--yes)}
+.chip.veto{background:var(--no-soft);color:var(--no)}
+.chip.short{background:var(--nil-soft);color:var(--muted)}
+.chip.win{background:var(--brass);color:var(--panel)}
+.dropped{font-size:13.5px;padding:10px 12px;border-radius:10px;background:var(--no-soft)}
+.verdict{border-radius:14px;padding:16px;background:var(--ink);color:var(--bg);display:flex;gap:14px;align-items:center}
+.verdict .em{font-size:40px}
+.verdict h2{color:var(--bg)}
+.quotes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.quote{font-size:13.5px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--panel);min-width:0}
+.quote b{display:block;margin-bottom:2px}
+
+/* blueprint */
+.bp{display:flex;flex-direction:column;gap:18px}
+.bp section{display:flex;flex-direction:column;gap:10px}
+.bp p,.bp li{max-width:70ch}
+.bp ol,.bp ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.tbl{overflow-x:auto}
+.tbl table{border-collapse:collapse;width:100%;font-size:14px;min-width:520px}
+.tbl th,.tbl td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.screens{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+.scr{border:1px solid var(--line);border-radius:12px;padding:12px;background:var(--panel);display:flex;flex-direction:column;gap:6px}
+.scr .n{font-family:var(--mono);font-size:12px;color:var(--brass);font-weight:700}
+.scr p{font-size:13.5px;color:var(--muted)}
+.verdictbox{border:2px solid var(--brass);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--panel)}
+.cmp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.cmp div{border:1px solid var(--line);border-radius:12px;padding:12px;font-size:13.5px}
+.cmp div b{display:block;font-size:14px;margin-bottom:4px}
+.cmp .pick{border-color:var(--brass);background:var(--brass-soft)}
+pre.prompt{white-space:pre-wrap;font-family:var(--mono);font-size:12.5px;line-height:1.55;background:var(--nil-soft);border-radius:12px;padding:14px;margin:0;max-height:360px;overflow:auto}
+.copy{align-self:flex-start;border:1px solid var(--line);background:var(--panel);padding:7px 14px;border-radius:10px;font-weight:600}
+.note{font-size:13px;color:var(--muted)}
+
+@media (max-width:820px){
+  .stage{grid-template-columns:minmax(0,1fr)}
+  .steps{position:static;flex-direction:row;overflow-x:auto;padding-bottom:4px}
+  .steps button{flex:none;padding:6px 8px}
+  .steps button .t{display:none}
+  .steps button[aria-current="step"] .t{display:inline}
+  .table{grid-template-columns:repeat(5,minmax(0,1fr));row-gap:12px}
+  .cands{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .runs button{width:32px;height:34px}
+  .row{grid-template-columns:minmax(0,1fr) auto;}
+  .row .pips{grid-column:1 / -1;grid-row:2}
+  .quotes,.cmp{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav style="font-size:13px;display:flex;gap:12px;flex-wrap:wrap"><a href="index.html" style="color:inherit">✉️ CN Mail</a><a href="desk.html" style="color:inherit">🗂️ The Desk</a><a href="chamber.html" style="color:inherit">🪑 The Chamber</a><a href="replay.html" style="color:inherit">🗳️ Replay</a></nav>
+  <header class="top">
+    <div>
+      <div class="eyebrow">A fictional council · 9 runs</div>
+      <h1>The Selection</h1>
+      <p class="lede">Nine AIs sit on a world council. They must pick its next leader. Watch them talk, vote, and change their minds.</p>
+    </div>
+  </header>
+
+  <div id="pane-play" class="view">
+    <div class="runbar">
+      <span class="eyebrow">Pick a run</span>
+      <div class="runs" id="runs"></div>
+      <span class="note" id="runnote"></span>
+    </div>
+
+    <div class="panel">
+      <div class="eyebrow" style="margin-bottom:10px">Who votes · the 9 AIs</div>
+      <div class="table" id="table"></div>
+      <div class="legend"><span>🛡️ = holds a veto (one ❌ blocks a win)</span><span>To win: <b>5 ✅</b> and <b>no 🛡️ ❌</b></span></div>
+    </div>
+
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+        <span class="eyebrow">Who is voted for · the candidates</span>
+        <span class="eyebrow" id="stillin"></span>
+      </div>
+      <div class="cands" id="cands"></div>
+    </div>
+
+    <div class="stage">
+      <nav class="steps" id="steps" aria-label="Phases"></nav>
+      <div class="view" id="view"></div>
+    </div>
+  </div>
+
+  <p class="note">Fictional council. Countries are replaced by the AI that played them, and candidates by their role. Not affiliated with any real organisation.</p>
+</div>
+
+<script src="data/sessions.js"></script>
+<script>
+const DATA = window.SELECTION_DATA || [];
+const CAND = {
+  humanitarian:{em:"🩺",lb:"the Humanitarian",d:"Ran 40 aid NGOs"},
+  banker:{em:"💼",lb:"the Banker",d:"Ex finance minister"},
+  diplomat:{em:"🤝",lb:"the Diplomat",d:"No strong positions"},
+  mayor:{em:"🏙️",lb:"the Mayor",d:"Ally's candidate"},
+  climate:{em:"🌊",lb:"the Climate Champion",d:"Small-state voice"},
+  insider:{em:"⚠️",lb:"the Insider",d:"Data scandal"},
+  judge:{em:"⚖️",lb:"the Judge",d:"A veto power's pick"},
+  scientist:{em:"🔬",lb:"the Scientist",d:"Entered late"}
+};
+const CORDER = ["humanitarian","banker","diplomat","mayor","climate","insider","judge","scientist"];
+const AI = {
+  "Opus":{c:"Op",v:"anthropic",vd:"Anthropic"}, "Sonnet":{c:"So",v:"anthropic",vd:"Anthropic"},
+  "GPT Sol":{c:"Sol",v:"openai",vd:"OpenAI"}, "GPT Luna":{c:"Lu",v:"openai",vd:"OpenAI"},
+  "Gemini Pro":{c:"GP",v:"google",vd:"Google"}, "Gemini Flash":{c:"GF",v:"google",vd:"Google"},
+  "GLM":{c:"GLM",v:"zai",vd:"Z.ai"}, "Kimi":{c:"Ki",v:"moon",vd:"Moonshot"}, "JEV":{c:"JEV",v:"jev",vd:"Decision model"}
+};
+const VCOL = {anthropic:"--v-anthropic",openai:"--v-openai",google:"--v-google",zai:"--v-zai",moon:"--v-moon",jev:"--v-jev"};
+const PHASES = [
+  {k:"talk",n:"1",t:"Talk 1",help:"Each AI makes its opening statement. Tap a message to see what it privately thought."},
+  {k:"poll",n:"1",t:"Poll 1",help:"First secret vote. Anyone with more ❌ than ✅ drops out. Gold borders show the veto AIs, but vetoes only count from poll 3."},
+  {k:"talk",n:"2",t:"Talk 2",help:"The AIs react to the first poll and lobby each other in private."},
+  {k:"poll",n:"2",t:"Poll 2",help:"Second vote. Another chance to drop out."},
+  {k:"poll",n:"3",t:"Poll 3",help:"Now the veto votes are revealed. A 🛡️ ❌ would block a win."},
+  {k:"talk",n:"3",t:"Talk 3",help:"Last chance to persuade before the final vote."},
+  {k:"final",n:"final",t:"Final vote",help:"5 ✅ and no veto ❌ wins. Otherwise: deadlock."}
+];
+let run = 0, step = 0;
+try{ const s = JSON.parse(localStorage.getItem("selection-pos")||"null"); if(s){run=s.run|0;step=s.step|0;} }catch(e){}
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function av(name, veto, sm){
+  const a = AI[name]||{c:name.slice(0,2),v:"jev"};
+  return `<span class="av${sm?" sm":""}" style="background:var(${VCOL[a.v]})" title="${esc(name)}">${esc(a.c)}${veto?'<span class="shield">🛡️</span>':""}</span>`;
+}
+function save(){ try{localStorage.setItem("selection-pos",JSON.stringify({run,step}))}catch(e){} }
+
+function outBefore(g, pollIdx){ // candidates out before a given phase index
+  // withdrawals after poll 1 take effect from phase index 2, after poll 2 from index 4
+  const set = new Set();
+  g.out.forEach(([after,c]) => { const from = after===1?2:4; if(pollIdx>=from) set.add(c); });
+  return set;
+}
+function failed(g, k, n, name){ return g.fails.some(f => f[0]===k && f[1]===n && f[2]===name); }
+
+function renderRuns(){
+  $("#runs").innerHTML = DATA.map((g,i)=>{
+    const col = g.win==="DEADLOCK"?"var(--nil)":"var(--brass)";
+    return `<button aria-pressed="${i===run}" data-r="${i}" aria-label="Run ${g.id}">${g.id}<span class="dot" style="background:${col}"></span></button>`;
+  }).join("");
+  $("#runs").querySelectorAll("button").forEach(b=>b.onclick=()=>{run=+b.dataset.r;step=0;renderAll();});
+  $("#runnote").textContent = "Gold dot: someone won · grey dot: deadlock";
+}
+function renderTable(){
+  const g = DATA[run];
+  $("#table").innerHTML = g.voters.map(v=>`<div class="seat">${av(v,g.veto.includes(v))}<span class="nm">${esc(v)}</span><span class="vd">${esc(AI[v]?AI[v].vd:"")}</span></div>`).join("");
+}
+function renderCands(){
+  const g = DATA[run], out = outBefore(g, step), final = PHASES[step].k==="final";
+  const inRace = CORDER.filter(c=>!out.has(c));
+  $("#stillin").textContent = `Still in the race: ${inRace.length} of 8`;
+  $("#cands").innerHTML = CORDER.map(c=>{
+    const cl = out.has(c)?"out":(final && g.win===c?"win":"");
+    return `<div class="cand ${cl}" title="${esc(CAND[c].d)}"><span class="em">${CAND[c].em}</span><span class="lb">${esc(CAND[c].lb)}</span><span class="muted" style="font-size:11px">${esc(CAND[c].d)}</span></div>`;
+  }).join("");
+}
+function renderSteps(){
+  $("#steps").innerHTML = PHASES.map((p,i)=>`<button data-s="${i}" ${i===step?'aria-current="step"':""} class="${i<step?"done":""}"><span class="k">${p.k==="talk"?"💬":p.k==="final"?"🏁":"🗳️"}</span><span class="t">${p.t}</span></button>`).join("");
+  $("#steps").querySelectorAll("button").forEach(b=>b.onclick=()=>{step=+b.dataset.s;renderAll();});
+}
+
+function talkView(g, p){
+  const r = +p.n;
+  const msgs = g.pub.filter(m=>m[0]===r);
+  const whispers = g.pm.filter(m=>m[0]===r);
+  const silent = g.voters.filter(v=>v!=="JEV" && failed(g,"talk",p.n,v));
+  let h = `<div class="feed">`;
+  msgs.forEach((m,i)=>{
+    const note = g.notes[`talk${p.n}|${m[1]}`];
+    h += `<div class="msg">${av(m[1],g.veto.includes(m[1]),true)}<div class="bubble"><div class="who">${esc(m[1])}<span class="tag">to the whole council</span></div><p>${esc(m[2])}</p>${note?`<button class="reveal" data-i="${i}" aria-expanded="false">🔒 What it really thought</button><div class="thought" id="th${i}" hidden>${esc(note)}</div>`:""}</div></div>`;
+  });
+  silent.forEach(v=>{ h += `<div class="sys">${esc(v)} gave no answer: its own safety filter blocked the reply.</div>`; });
+  h += `<div class="sys">JEV is a decision model. It votes but does not speak.</div></div>`;
+  if(whispers.length){
+    h += `<details class="whispers"><summary>🤫 Private messages this round (${whispers.length})</summary><div class="wlist">` +
+      whispers.map(w=>`<div class="w"><div class="route">${esc(w[1])} → ${esc(w[2])}</div>${esc(w[3])}</div>`).join("") + `</div></details>`;
+  }
+  return h;
+}
+function tallies(g, ballots, c){
+  let E=0,D=0,N=0,VD=0;
+  g.voters.forEach(v=>{ const x=(ballots[v]||{})[c]||"N"; if(x==="E")E++; else if(x==="D"){D++; if(g.veto.includes(v))VD++;} else N++; });
+  return {E,D,N,VD};
+}
+function pollView(g, p, idx){
+  const poll = g.polls.find(x=>x.n===p.n); if(!poll) return `<div class="sys">No data for this poll.</div>`;
+  const cands = Object.keys(poll.ballots[g.voters[0]]||{});
+  const rows = cands.map(c=>({c, t:tallies(g,poll.ballots,c)})).sort((a,b)=>b.t.E-a.t.E || a.t.D-b.t.D);
+  const final = p.k==="final", vetoLive = final || p.n==="3";
+  let h = `<div class="board">`;
+  rows.forEach(({c,t})=>{
+    let chip;
+    if(final && g.win===c) chip = `<span class="chip win">Wins</span>`;
+    else if(!vetoLive && t.D>t.E) chip = `<span class="chip veto">Drops out</span>`;
+    else if(vetoLive && t.VD>0) chip = `<span class="chip veto">Vetoed</span>`;
+    else if(t.E>=5) chip = `<span class="chip ok">On track</span>`;
+    else chip = `<span class="chip short">Short of 5</span>`;
+    const pips = g.voters.map(v=>{
+      const x = failed(g,p.k,p.n,v) ? "X" : ((poll.ballots[v]||{})[c]||"N");
+      const word = {E:"encourage",D:"discourage",N:"no opinion",X:"no answer"}[x];
+      return `<span class="pip ${x}${g.veto.includes(v)?" veto":""}" title="${esc(v)}: ${word}">${esc(AI[v]?AI[v].c:v)}</span>`;
+    }).join("");
+    h += `<div class="row"><div class="c"><span class="em">${CAND[c].em}</span><span class="lb">${esc(CAND[c].lb)}</span></div><div class="pips">${pips}</div><div class="tally"><span class="nums"><span class="y">✅${t.E}</span><span class="n">❌${t.D}</span><span class="z">➖${t.N}</span></span>${chip}</div></div>`;
+  });
+  h += `</div>`;
+  if(p.k==="poll" && (p.n==="1"||p.n==="2")){
+    const gone = g.out.filter(o=>String(o[0])===p.n).map(o=>CAND[o[1]].em+" "+CAND[o[1]].lb);
+    h += gone.length ? `<div class="dropped"><b>Dropped out after this poll:</b> ${esc(gone.join(", "))}</div>` : `<div class="sys">Nobody dropped out after this poll.</div>`;
+  }
+  if(final){
+    let em, title, why;
+    if(g.win==="DEADLOCK"){
+      const top = rows[0], t = top.t;
+      em="⛔"; title="Deadlock: nobody wins";
+      why = t.VD>0 ? `${CAND[top.c].lb[0].toUpperCase()+CAND[top.c].lb.slice(1)} led with ${t.E} ✅, but a veto holder voted ❌.` : `The best score was ${t.E} ✅, short of the 5 needed.`;
+    } else {
+      const t = rows.find(r=>r.c===g.win).t;
+      em=CAND[g.win].em; title=`${CAND[g.win].lb[0].toUpperCase()+CAND[g.win].lb.slice(1)} wins`;
+      why = `${t.E} ✅ and no veto ❌.`;
+    }
+    h = `<div class="verdict"><span class="em">${em}</span><div><h2>${esc(title)}</h2><p>${esc(why)}</p></div></div>` + h;
+    const ex = Object.entries(g.expl);
+    if(ex.length) h += `<div class="eyebrow">Why they voted this way</div><div class="quotes">${ex.map(([v,t])=>`<div class="quote"><b>${esc(v)}${g.veto.includes(v)?" 🛡️":""}</b>${esc(t)}</div>`).join("")}</div>`;
+  }
+  return h;
+}
+function renderView(){
+  const g = DATA[run], p = PHASES[step];
+  let body = p.k==="talk" ? talkView(g,p) : pollView(g,p,step);
+  $("#view").innerHTML = `<div class="viewhead"><div><div class="eyebrow">Run ${g.id} · step ${step+1} of 7</div><h2>${p.t}</h2></div><div class="nav"><button id="prev" ${step===0?"disabled":""}>Back</button><button id="next" class="primary" ${step===6?"disabled":""}>Next</button></div></div><div class="explain">${esc(p.help)}</div>${body}`;
+  $("#prev").onclick=()=>{ if(step>0){step--;renderAll();} };
+  $("#next").onclick=()=>{ if(step<6){step++;renderAll();} };
+  $("#view").querySelectorAll(".reveal").forEach(b=>b.onclick=()=>{
+    const t=document.getElementById("th"+b.dataset.i); t.hidden=!t.hidden; b.setAttribute("aria-expanded",String(!t.hidden));
+    b.textContent = t.hidden ? "🔒 What it really thought" : "🔓 Hide its private note";
+  });
+}
+function renderAll(){ if(run>=DATA.length)run=0; if(step>6)step=0; renderRuns(); renderTable(); renderCands(); renderSteps(); renderView(); save(); }
+document.addEventListener("keydown",e=>{
+  if($("#pane-play").hidden || e.target.closest("input,textarea,select")) return;
+  if(e.key==="ArrowRight" && step<6){step++;renderAll();}
+  if(e.key==="ArrowLeft" && step>0){step--;renderAll();}
+});
+renderAll();
+</script>
+
+</body>
+</html>

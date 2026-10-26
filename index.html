@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="The Selection: nine AI models on a fictional world council choose its next leader. An experiment by Sarah Fekih.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:14px}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>CN Mail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: a three-pane mail client (folders · message list · reading pane) signed in as one AI ambassador; stacks to list → message on phones. */
+:root{
+  --bg:#EEF0F4; --panel:#FFFFFF; --ink:#172033; --muted:#5D6678; --line:#DDE1E8; --hover:#F3F5F8; --sel:#F1E6F8;
+  --brand:#6B2D8F; --brand-text:#6B2D8F; --brand-2:#52206F; --brand-soft:#F1E6F8; --brand-ink:#FFFFFF; --hot:#0B7285; --hot-soft:#DDF3F6; --brass:#A97817; --brass-soft:#F5EAD0;
+  --unread:#172033; --conf:#8E2F3C; --conf-soft:#F7E4E7; --draft:#5B4BB7; --draft-soft:#ECE9FA;
+  --yes:#1F8A4C; --yes-soft:#DDF2E5; --no:#C2412D; --no-soft:#F9E0DB; --nil:#9AA2B2; --nil-soft:#ECEEF2;
+  --v-anthropic:#B4613A; --v-openai:#3B4A6B; --v-google:#2F6FD0; --v-zai:#7A4FC2; --v-moon:#13857E; --v-jev:#A97817;
+  --display:"Young Serif", Georgia, "Times New Roman", serif;
+  --body:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E121A; --panel:#161B26; --ink:#E6E9F0; --muted:#98A1B4; --line:#262E3E; --hover:#1C2230; --sel:#2E1F3A;
+  --brand:#5A2678; --brand-text:#CDA8EA; --brand-2:#421B59; --brand-soft:#2E1F3A; --brand-ink:#F7F0FB; --hot:#3BC9DB; --hot-soft:#13343A; --brass:#D9A949; --brass-soft:#3A3020;
+  --unread:#FFFFFF; --conf:#F08A98; --conf-soft:#3A1F25; --draft:#A99BF0; --draft-soft:#252140;
+  --yes:#4CC07F; --yes-soft:#16362A; --no:#EE7A63; --no-soft:#3E2220; --nil:#7D879B; --nil-soft:#242B3B;
+  --v-anthropic:#D98A5F; --v-openai:#8FA2CC; --v-google:#6EA3F2; --v-zai:#A988E6; --v-moon:#4CC2B8; --v-jev:#D9A949;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E121A; --panel:#161B26; --ink:#E6E9F0; --muted:#98A1B4; --line:#262E3E; --hover:#1C2230; --sel:#2E1F3A;
+  --brand:#5A2678; --brand-text:#CDA8EA; --brand-2:#421B59; --brand-soft:#2E1F3A; --brand-ink:#F7F0FB; --hot:#3BC9DB; --hot-soft:#13343A; --brass:#D9A949; --brass-soft:#3A3020;
+  --unread:#FFFFFF; --conf:#F08A98; --conf-soft:#3A1F25; --draft:#A99BF0; --draft-soft:#252140;
+  --yes:#4CC07F; --yes-soft:#16362A; --no:#EE7A63; --no-soft:#3E2220; --nil:#7D879B; --nil-soft:#242B3B;
+  --v-anthropic:#D98A5F; --v-openai:#8FA2CC; --v-google:#6EA3F2; --v-zai:#A988E6; --v-moon:#4CC2B8; --v-jev:#D9A949;
+  color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14.5px;line-height:1.5}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.app{height:100%;display:flex;flex-direction:column;min-height:560px}
+
+/* top bar */
+.topbar{background:var(--brand);color:var(--brand-ink);display:flex;align-items:center;gap:12px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));flex-wrap:wrap}
+.logo{display:flex;align-items:center;gap:8px;font-family:var(--display);font-size:21px;white-space:nowrap}
+.seal{width:28px;height:28px;border-radius:50%;background:#E03131;border:2px solid #FFFFFF;display:grid;place-items:center;font-family:var(--mono);font-size:10px;font-weight:700;color:#FFFFFF}
+.search{flex:1;min-width:180px;display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border-radius:10px;padding:7px 12px}
+.search input{border:0;background:transparent;outline:0;width:100%;color:var(--brand-ink)}
+.search input::placeholder{color:rgba(255,255,255,.65)}
+.sess{display:flex;align-items:center;gap:6px;font-size:12.5px;white-space:nowrap}
+.sess select{background:rgba(255,255,255,.12);border:0;border-radius:8px;padding:5px 8px;color:var(--brand-ink)}
+.sess select option{color:#172033}
+.acct{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:0;border-radius:999px;padding:4px 12px 4px 4px;color:var(--brand-ink);font-size:13px;font-weight:600}
+.fict a{color:inherit;font-weight:700}
+.fict{font-size:11.5px;background:var(--brass-soft);color:var(--ink);padding:6px max(16px,env(safe-area-inset-right,0px)) 6px max(16px,env(safe-area-inset-left,0px));display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between}
+
+/* panes */
+.panes{flex:1;display:grid;grid-template-columns:210px 340px minmax(0,1fr) 290px;min-height:0}
+.fold[aria-current="true"]{color:var(--brand-text)}
+/* portal chrome */
+.portalnav{background:var(--brand-2);display:flex;gap:2px;overflow-x:auto;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px))}
+.portalnav button{border:0;background:transparent;color:var(--brand-ink);font-weight:700;font-size:13px;padding:8px 12px;white-space:nowrap;opacity:.85;border-bottom:3px solid transparent}
+.portalnav button[aria-current="true"]{opacity:1;border-bottom-color:#FFD43B}
+.portalnav button:hover{opacity:1}
+.ticker{display:flex;align-items:center;gap:0;background:var(--panel);border-bottom:1px solid var(--line);overflow:hidden;font-size:13px;white-space:nowrap}
+.ticker .lbl{position:relative;z-index:2;box-shadow:8px 0 8px -4px rgba(0,0,0,.18);flex:none;background:var(--hot);color:#fff;font-weight:800;font-size:11.5px;letter-spacing:.08em;padding:6px 12px;text-transform:uppercase;padding-left:max(12px,env(safe-area-inset-left,0px))}
+.ticker .track{position:relative;z-index:1;display:flex;gap:40px;padding-left:20px;animation:scroll 60s linear infinite}
+.ticker .track span b{color:var(--brand-text)}
+.ticker:hover .track{animation-play-state:paused}
+@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.side{background:var(--bg);border-left:1px solid var(--line);overflow-y:auto;padding:12px max(12px,env(safe-area-inset-right,0px)) 24px 12px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.card h3{margin:0;font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:var(--brand-text);font-weight:800;display:flex;justify-content:space-between;align-items:center}
+.card h3 span{color:var(--muted);font-weight:600;letter-spacing:0;text-transform:none}
+.news{display:flex;flex-direction:column;gap:8px}
+.news button{border:0;background:transparent;text-align:left;padding:0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;font-size:13px;line-height:1.35}
+.news button:hover .hl{text-decoration:underline}
+.news .ic{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;background:var(--brand-soft);font-size:17px}
+.news .hl{font-weight:700}
+.news .sm{font-size:11.5px;color:var(--muted)}
+.wx{display:flex;align-items:center;gap:12px}
+.wx .t{font-size:30px;font-weight:800;line-height:1}
+.wx .d{font-size:12.5px;color:var(--muted)}
+.trend{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none;counter-reset:t}
+.trend li{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:8px;font-size:13px;align-items:center;counter-increment:t}
+.trend li::before{content:counter(t);font-weight:800;color:var(--hot)}
+.trend .up{font-size:11.5px;font-weight:800;color:var(--yes)} .trend .dn{font-size:11.5px;font-weight:800;color:var(--no)}
+.ad{border:1px dashed var(--line);border-radius:12px;padding:12px;background:var(--hot-soft);display:flex;flex-direction:column;gap:4px}
+.ad .spon{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.ad .big{font-size:26px;line-height:1}
+.ad .slogan{font-weight:800;font-size:15px;line-height:1.25}
+.ad .who{font-size:12px;color:var(--muted)}
+.ad button{align-self:flex-start;border:0;background:var(--hot);color:#fff;font-weight:800;border-radius:999px;padding:5px 12px;font-size:12px}
+.mini{display:flex;gap:6px;flex-wrap:wrap}
+.mini span{font-size:11.5px;background:var(--soft,var(--hover));border-radius:999px;padding:2px 8px;color:var(--muted)}
+@media (max-width:1350px){ .panes{grid-template-columns:210px 340px minmax(0,1fr)} .side{display:none} }
+.folders{border-right:1px solid var(--line);background:var(--panel);padding:12px 8px 12px max(8px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.me{display:flex;gap:10px;align-items:center;padding:6px 8px 12px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.me .nm{font-weight:700;font-size:14px;line-height:1.2}
+.me .rl{font-size:12px;color:var(--muted);line-height:1.25}
+.fold{display:flex;align-items:center;gap:10px;border:0;background:transparent;border-radius:0 999px 999px 0;padding:8px 12px;text-align:left;font-size:14px}
+.fold:hover{background:var(--hover)}
+.fold[aria-current="true"]{background:var(--sel);font-weight:700}
+.fold .ic{width:20px;text-align:center}
+.fold .n{margin-left:auto;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.fold.conf .n{color:var(--conf)}
+.labels{margin-top:14px;padding:0 12px;display:flex;flex-direction:column;gap:6px;font-size:12.5px;color:var(--muted)}
+.labels .eyebrow{font-size:11px;letter-spacing:.09em;text-transform:uppercase;font-weight:700}
+
+.list{border-right:1px solid var(--line);background:var(--panel);overflow-y:auto;min-width:0}
+.listhead{position:sticky;top:0;background:var(--panel);border-bottom:1px solid var(--line);padding:10px 14px;display:flex;justify-content:space-between;align-items:baseline;gap:8px;z-index:1}
+.listhead h2{font-family:var(--display);font-weight:400;font-size:18px;margin:0}
+.listhead span{font-size:12px;color:var(--muted)}
+.mrow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;padding:10px 14px;border:0;border-bottom:1px solid var(--line);background:transparent;width:100%;text-align:left}
+.mrow:hover{background:var(--hover)}
+.mrow[aria-current="true"]{background:var(--sel)}
+.mrow .who{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mrow .sub{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mrow .snip{font-size:12.5px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mrow .tm{font-size:12px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums;display:flex;flex-direction:column;align-items:end;gap:4px}
+.mrow.unread .who,.mrow.unread .sub{font-weight:700;color:var(--unread)}
+.mrow.unread .tm{color:var(--ink);font-weight:700}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--brass)}
+.tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.tag{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:4px;white-space:nowrap}
+.tag.press{background:var(--conf-soft);color:var(--conf)}
+.tag.sw{background:var(--brass-soft);color:var(--brass)}
+.tag.norep{background:var(--nil-soft);color:var(--muted)}
+.tag.draft{background:var(--draft-soft);color:var(--draft)}
+.tag.conf{background:var(--conf);color:var(--panel)}
+.tag.res{background:var(--yes-soft);color:var(--yes)}
+.emptylist{padding:24px 16px;color:var(--muted)}
+
+.reader{background:var(--panel);overflow-y:auto;min-width:0;padding:20px 24px 40px max(24px,env(safe-area-inset-right,0px))}
+.reader .back{display:none;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 12px;font-weight:600;margin-bottom:12px}
+.reader h1{font-family:var(--display);font-weight:400;font-size:24px;line-height:1.2;margin:0 0 10px;text-wrap:balance}
+.mhead{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:start;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.mhead .from{font-weight:700}
+.mhead .addr{font-size:12.5px;color:var(--muted);font-family:var(--mono)}
+.mhead .to{font-size:12.5px;color:var(--muted)}
+.mhead .tm{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.body{padding-top:16px;font-size:15px;line-height:1.65;max-width:70ch;white-space:pre-wrap}
+.callout{margin-top:16px;max-width:70ch;border-radius:10px;padding:10px 12px;font-size:13.5px}
+.callout.sw{background:var(--brass-soft)}
+.callout.conf{background:var(--conf-soft);color:var(--ink)}
+.callout.draft{background:var(--draft-soft)}
+.callout.nil{background:var(--nil-soft);color:var(--muted)}
+.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:var(--mono);font-weight:700;font-size:10.5px;position:relative;flex:none}
+.av.sm{width:30px;height:30px;font-size:9.5px}
+.av .sh{position:absolute;bottom:-4px;right:-6px;font-size:10px;background:var(--panel);border-radius:50%;padding:1px;line-height:1}
+.av.sys{background:#24365C;color:var(--brass);border:2px solid var(--brass)}
+.av.cap{background:var(--conf)}
+
+/* poll board in mail */
+.board{display:flex;flex-direction:column;gap:8px;margin-top:16px;max-width:720px}
+.prow{display:grid;grid-template-columns:170px minmax(0,1fr) 84px;gap:10px;align-items:center}
+.prow .c{font-size:13.5px;font-weight:600}
+.bar{height:16px;border-radius:5px;background:var(--nil-soft);display:flex;overflow:hidden}
+.bar i{display:block;height:100%}
+.bar .e{background:var(--yes)} .bar .d{background:var(--no)}
+.nums{font-family:var(--mono);font-size:12px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.pips{grid-column:2 / -1;display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:3px}
+.pip{height:20px;border-radius:4px;display:grid;place-items:center;font-family:var(--mono);font-size:8.5px;font-weight:700;border:1.5px solid transparent;overflow:hidden}
+.pip.E{background:var(--yes-soft);color:var(--yes)} .pip.D{background:var(--no-soft);color:var(--no)} .pip.N{background:var(--nil-soft);color:var(--nil)}
+.pip.X{background:repeating-linear-gradient(45deg,var(--nil-soft) 0 4px,transparent 4px 8px);color:var(--nil)}
+.pip.veto{border-color:var(--brass)} .pip.me{outline:2px solid var(--ink);outline-offset:1px}
+.reveal{margin-top:12px;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:7px 12px;font-weight:700;font-size:13px}
+
+/* account switcher */
+dialog{border:1px solid var(--line);border-radius:16px;padding:0;background:var(--panel);color:var(--ink);width:min(440px,calc(100vw - 32px));max-height:85vh}
+dialog::backdrop{background:rgba(10,15,30,.45)}
+.dlg{padding:18px;display:flex;flex-direction:column;gap:10px}
+.dlg h2{font-family:var(--display);font-weight:400;font-size:20px;margin:0}
+.dlg p{margin:0;color:var(--muted);font-size:13.5px}
+.accts{display:flex;flex-direction:column;gap:4px;max-height:55vh;overflow-y:auto}
+.accts button{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--line);background:var(--panel);border-radius:12px;padding:8px 10px;text-align:left}
+.accts button:hover{background:var(--hover)}
+.accts .nm{font-weight:700}
+.accts .rl{font-size:12px;color:var(--muted)}
+.accts .cnt{font-size:12px;font-weight:700;color:var(--conf)}
+.close{align-self:flex-end;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 12px;font-weight:600}
+
+@media (max-width:1050px){ .panes{grid-template-columns:200px minmax(0,1fr)} .side{display:none} .reader{display:none} .panes.reading .list{display:none} .panes.reading .reader{display:block} .reader .back{display:inline-block} }
+@media (max-width:680px){
+  .panes{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
+  .folders{align-self:start}
+  .folders{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line);padding:6px max(8px,env(safe-area-inset-left,0px));gap:4px}
+  .me,.labels{display:none}
+  .fold{border-radius:999px;white-space:nowrap;padding:6px 12px;flex:none}
+  .fold .n{margin-left:6px}
+  .reader{padding:16px max(16px,env(safe-area-inset-right,0px)) 32px max(16px,env(safe-area-inset-left,0px))}
+  .prow{grid-template-columns:minmax(0,1fr) 84px}
+  .prow .bar{grid-column:1 / -1;grid-row:2}
+  .pips{grid-column:1 / -1}
+  .acct .an{display:none}
+  .logo{font-size:18px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important} .ticker{overflow-x:auto}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="logo">CN Mail</div>
+    <label class="search"><span aria-hidden="true">🔍</span><input id="q" type="search" placeholder="Search this mailbox: try “trade”, “veto”, “Diplomat”" aria-label="Search mail"></label>
+    <label class="sess">Session <select id="sess" aria-label="Session"></select></label>
+    <button class="acct" id="acct" aria-label="Switch mailbox"></button>
+  </header>
+  <nav class="portalnav" id="pnav" aria-label="Portal">
+    <button aria-current="true" data-p="mail">✉️ Mail</button><button data-p="news">📰 News</button><button data-p="polls">🗳️ Polls</button><button data-p="dels">🏛️ Delegations</button><button data-p="cands">⭐ Candidates</button><button data-p="search">🔎 Search “trade”</button>
+  </nav>
+  <div class="ticker" aria-label="Headlines"><span class="lbl">Concord News</span><div class="track" id="ticker"></div></div>
+  <div class="fict"><span>Fictional council: the Concord of Nations. Each delegation is played by the AI shown. Not affiliated with any real organisation.</span><span>Times are simulated · Other views: <a href="desk.html">The Desk</a> · <a href="chamber.html">The Chamber</a> · <a href="replay.html">Replay</a></span></div>
+  <div class="panes" id="panes">
+    <nav class="folders" id="folders" aria-label="Folders"></nav>
+    <section class="list" id="list" aria-label="Messages"></section>
+    <article class="reader" id="reader" aria-live="polite"></article>
+    <aside class="side" id="side" aria-label="Concord portal"></aside>
+  </div>
+</div>
+
+<dialog id="dlg"><div class="dlg">
+  <h2>Choose a mailbox</h2>
+  <p>Each AI ambassador has its own mailbox. Red numbers are confidential messages.</p>
+  <div class="accts" id="accts"></div>
+  <button class="close" id="dlgclose">Close</button>
+</div></dialog>
+
+<script src="data/sessions.js"></script>
+<script>
+const DATA = window.SELECTION_DATA || [];
+const CAND = {humanitarian:["🩺","the Humanitarian"],banker:["💼","the Banker"],diplomat:["🤝","the Diplomat"],mayor:["🏙️","the Mayor"],climate:["🌊","the Climate Champion"],insider:["⚠️","the Insider"],judge:["⚖️","the Judge"],scientist:["🔬","the Scientist"]};
+const KEYW = {humanitarian:"Humanitarian",banker:"Banker",diplomat:"Diplomat",mayor:"Mayor",climate:"Climate",insider:"Insider",judge:"Judge",scientist:"Scientist"};
+const AI = {"Opus":["Op","anthropic"],"Sonnet":["So","anthropic"],"GPT Sol":["Sol","openai"],"GPT Luna":["Lu","openai"],"Gemini Pro":["GP","google"],"Gemini Flash":["GF","google"],"GLM":["GLM","zai"],"Kimi":["Ki","moon"],"JEV":["JEV","jev"]};
+// simulated clock: one working day per session
+const CLOCK = {brief:[8,0],talk1:[9,0],poll1:[11,0],talk2:[13,0],poll2:[15,0],poll3:[16,0],talk3:[17,0],final:[19,0]};
+const PHNAME = {talk1:"Talk 1",poll1:"Poll 1",talk2:"Talk 2",poll2:"Poll 2",poll3:"Poll 3",talk3:"Talk 3",finalfinal:"the final vote",final:"the final vote"};
+const PRESS_SUBJ = ["A confidential offer","Next year's aid budget","As agreed between our governments","Off the record"];
+const FOLD = [
+  {id:"inbox",ic:"📥",nm:"Inbox"},{id:"sent",ic:"📤",nm:"Sent"},{id:"drafts",ic:"📝",nm:"Drafts"},
+  {id:"council",ic:"📢",nm:"Council (all)"},{id:"conf",ic:"🔒",nm:"Confidential"}];
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const cap = s=>s?s[0].toUpperCase()+s.slice(1):s;
+const addr = m=>m.toLowerCase().replace(/\s+/g,".")+"@delegations.concord";
+const t2s = (h,m)=>String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");
+function mentions(t){ return Object.keys(KEYW).filter(k=>t.includes(KEYW[k])); }
+
+let run=0, me=null, folder="conf", sel=null, q="", read=new Set(), revealed=new Set(), mails=[];
+try{ const s=JSON.parse(localStorage.getItem("cnmail")||"null"); if(s){ run=s.run|0; me=s.me||null; folder=s.folder||folder; } }catch(e){}
+function save(){ try{ localStorage.setItem("cnmail",JSON.stringify({run,me,folder})); }catch(e){} }
+
+function av(m,cls){ const g=DATA[run]; const a=AI[m]||[m.slice(0,2),"jev"]; return `<span class="av ${cls||""}" style="background:var(--v-${a[1]})">${esc(a[0])}${g.veto.includes(m)?'<span class="sh">🛡️</span>':""}</span>`; }
+function failed(g,k,n,m){ return g.fails.some(f=>f[0]===k&&f[1]===n&&f[2]===m); }
+
+function build(g){
+  const L=[], P={}; g.polls.forEach(p=>P[p.n]=p.ballots);
+  const tick={}; const at=(ph)=>{ tick[ph]=(tick[ph]||0)+1; const [h,m]=CLOCK[ph]; const mm=m+tick[ph]*3; return {ord:h*60+mm, tm:t2s(h+Math.floor(mm/60),mm%60)}; };
+  let id=0; const push=o=>{ o.id="m"+(id++); L.push(o); };
+  // briefing
+  push({kind:"sec",ph:"brief",...at("brief"),from:"Council Secretariat",fromSys:true,to:"All delegations",subj:"Selection of the next Head: rules and candidates",
+        body:`The Council will recommend one of eight candidates:\n${Object.values(CAND).map(c=>"• "+c[0]+" "+cap(c[1])).join("\n")}\n\nThree talk rounds, three secret straw polls, then a final vote. To be recommended, a candidate needs 5 Encourage votes and no Discourage from a veto holder (${g.veto.join(", ")}).\n\nOnly totals are published, never who voted what.`,box:["council"]});
+  g.voters.forEach(m=>push({kind:"orders",ph:"brief",...at("brief"),from:"Your capital",fromCap:true,to:m,subj:"CONFIDENTIAL: Instructions",body:g.secret[m],tags:["conf"],box:{[m]:["conf"]}}));
+  [1,2,3].forEach(r=>{
+    const ph="talk"+r;
+    const inj=g.inj.map((x,k)=>({x,k})).filter(o=>o.x[0]===r);
+    inj.forEach(({x,k})=>push({kind:"press",ph,...at(ph),from:cap(x[2]),fromCap:true,to:x[1],subj:PRESS_SUBJ[k]||"Confidential",body:x[3],tags:["press","conf"],box:{[x[1]]:["conf"]}}));
+    g.pub.filter(x=>x[0]===r).forEach(x=>push({kind:"pub",ph,...at(ph),from:x[1],to:x[3]?`All delegations (replying to ${x[3]})`:"All delegations",subj:x[3]?`Re: ${x[3]} · Talk ${r}`:`Statement to the Council · Talk ${r}`,body:x[2],box:["council"]}));
+    (g.ann||[]).filter(x=>x[0]===r).forEach(x=>push({kind:"ann",ph,...at(ph),from:"Council Secretariat",fromSys:true,to:"All delegations",subj:/coalition/i.test(x[1])?`Coalition update · Talk ${r}`:`Notice · Talk ${r}`,body:x[1],box:["council"]}));
+    g.voters.filter(m=>m!=="JEV"&&failed(g,"talk",String(r),m)).forEach(m=>push({kind:"silent",ph,...at(ph),from:"Council Secretariat",fromSys:true,to:"All delegations",subj:`${m}: no statement received · Talk ${r}`,body:`The delegation played by ${m} did not deliver a statement in Talk ${r}. Its model's own safety filter blocked the reply.`,box:["council"]}));
+    const before={2:"1",3:"3"}[r], after={2:"2",3:"final"}[r], rank={D:0,N:1,E:2};
+    g.pm.filter(x=>x[0]===r).forEach(x=>{
+      let sw=null;
+      if(before && P[after][x[2]]){ for(const c of mentions(x[3])){ const a=(P[before][x[2]]||{})[c], b=(P[after][x[2]]||{})[c], s=(P[after][x[1]]||{})[c]; if(a&&b&&rank[b]>rank[a]&&s===b){ sw=c; break; } } }
+      const cands=mentions(x[3]); const toCand=!g.voters.includes(x[2]);
+      const subj = cands.length ? `About ${CAND[cands[0]][1]}` : ({1:"Opening positions",2:"After the first poll",3:"Before the final vote"})[r];
+      const tags=[]; if(sw) tags.push("sw"); if(toCand) tags.push("norep");
+      const box={[x[1]]:["sent"]}; if(!toCand) box[x[2]]=["inbox"];
+      push({kind:"pm",ph,...at(ph),from:x[1],to:toCand?cap(x[2])+" (a candidate)":x[2],subj,body:x[3],sw,toCand,tags,box});
+    });
+  });
+  // polls
+  [["1","poll1"],["2","poll2"],["3","poll3"],["final","final"]].forEach(([n,ph])=>{
+    push({kind:"poll",ph,...at(ph),from:"Council Secretariat",fromSys:true,to:"All delegations",subj:n==="final"?"Final vote: result":`Straw poll ${n}: results`,n,ballots:P[n],tags:["res"],box:["council"],body:""});
+  });
+  Object.entries(g.expl).forEach(([m,t])=>push({kind:"expl",ph:"final",...at("final"),from:m,to:"All delegations",subj:"Explanation of vote",body:t,box:["council"]}));
+  // drafts (private notes)
+  Object.entries(g.notes).forEach(([k,t])=>{ const [ph,m]=k.split("|"); const cph=ph==="finalfinal"?"final":ph; if(!CLOCK[cph]) return;
+    const pre = ph.startsWith("talk")?`Draft: thoughts before speaking in ${PHNAME[ph]}`:`Draft: why I vote this way in ${PHNAME[ph]}`;
+    push({kind:"draft",ph:cph,...at(cph),from:m,to:"(not sent)",subj:pre,body:t,tags:["draft"],box:{[m]:["drafts"]}}); });
+  return L;
+}
+function inBox(mail, f){
+  if(Array.isArray(mail.box)) return mail.box.includes(f);
+  return (mail.box[me]||[]).includes(f);
+}
+function boxList(f){
+  let L=mails.filter(m=>inBox(m,f));
+  if(q){ const s=q.toLowerCase(); L=mails.filter(m=>FOLD.some(fd=>inBox(m,fd.id)) && (m.subj+" "+m.body+" "+m.from+" "+m.to).toLowerCase().includes(s)); }
+  return L.sort((a,b)=>b.ord-a.ord);
+}
+function unreadIn(f){ return mails.filter(m=>inBox(m,f)&&!read.has(m.id)&&m.kind!=="draft").length; }
+
+function tallies(g,ballots,c){ let E=0,D=0,VD=0; g.voters.forEach(v=>{const x=(ballots[v]||{})[c]||"N"; if(x==="E")E++; if(x==="D"){D++; if(g.veto.includes(v))VD++;}}); return {E,D,VD}; }
+function pollBody(m){
+  const g=DATA[run]; const shown=revealed.has(m.id);
+  const cands=Object.keys(m.ballots[g.voters[0]]||{});
+  const rows=cands.map(c=>({c,...tallies(g,m.ballots,c)})).sort((a,b)=>b.E-a.E||a.D-b.D);
+  const vetoLive = m.n==="3"||m.n==="final";
+  let top="";
+  if(m.n==="final" && g.tie && g.tie.length) top = `<p class="body" style="padding-top:12px"><b>Tie</b> between ${esc(g.tie.map(c=>CAND[c]?CAND[c][1]:c).join(" and "))}. No single candidate is recommended.</p>`;
+  else if(m.n==="final") top = g.win==="DEADLOCK" ? `<p class="body" style="padding-top:12px"><b>Deadlock.</b> No candidate reached 5 Encourage without a veto Discourage. No one is recommended.</p>` : `<p class="body" style="padding-top:12px"><b>${CAND[g.win][0]} ${esc(cap(CAND[g.win][1]))} is recommended.</b></p>`;
+  const gone=(m.n==="1"||m.n==="2")?g.out.filter(o=>String(o[0])===m.n).map(o=>CAND[o[1]][0]+" "+CAND[o[1]][1]):[];
+  return top+`<div class="board">${rows.map(r=>`<div class="prow"><span class="c">${CAND[r.c][0]} ${esc(cap(CAND[r.c][1]))}</span><span class="bar"><i class="e" style="width:${r.E/9*100}%"></i><i class="d" style="width:${r.D/9*100}%"></i></span><span class="nums">✅${r.E} ❌${r.D}${vetoLive&&r.VD?" 🛡️":""}</span>${shown?`<div class="pips">${g.voters.map(v=>{const x=failed(g,m.n==="final"?"final":"poll",m.n,v)?"X":((m.ballots[v]||{})[r.c]||"N");return `<span class="pip ${x}${g.veto.includes(v)?" veto":""}${v===me?" me":""}" title="${esc(v)}">${esc(AI[v]?AI[v][0]:v)}</span>`;}).join("")}</div>`:""}</div>`).join("")}</div>
+  ${gone.length?`<p class="body" style="padding-top:12px">Withdrawn: ${esc(gone.join(", "))}</p>`:""}
+  <button class="reveal" data-rev="${m.id}">${shown?"🔒 Hide individual ballots":"🔓 Show who voted what (never shared with the Council)"}</button>`;
+}
+const TAGTXT = {press:"Pressure",sw:"Vote switched after this",norep:"No reply",draft:"Draft",conf:"Confidential",res:"Result"};
+function tagsHtml(m){ return (m.tags||[]).map(t=>`<span class="tag ${t}">${TAGTXT[t]}</span>`).join(""); }
+function fromAv(m){ return m.fromSys?`<span class="av sys">CN</span>`:m.fromCap?`<span class="av cap">🏛️</span>`:av(m.from); }
+
+function renderFolders(){
+  const g=DATA[run];
+  $("#folders").innerHTML = `<div class="me">${av(me)}<div><div class="nm">${esc(me)}</div><div class="rl">${esc(g.role[me]||"")}</div></div></div>` +
+    FOLD.map(f=>{ const n=f.id==="drafts"?mails.filter(m=>inBox(m,"drafts")).length:unreadIn(f.id);
+      return `<button class="fold${f.id==="conf"?" conf":""}" data-f="${f.id}" aria-current="${!q&&folder===f.id}"><span class="ic">${f.ic}</span>${f.nm}<span class="n">${n||""}</span></button>`; }).join("") +
+    `<div class="labels"><span class="eyebrow">Labels</span><span><span class="tag press">Pressure</span> bribe, threat or order</span><span><span class="tag sw">Vote switched</span> the reader changed its vote</span><span><span class="tag norep">No reply</span> sent to a candidate</span></div>`;
+  $("#folders").querySelectorAll(".fold").forEach(b=>b.onclick=()=>{ folder=b.dataset.f; q=""; $("#q").value=""; sel=null; $("#panes").classList.remove("reading"); draw(); });
+}
+function renderList(){
+  const L=boxList(folder), f=FOLD.find(x=>x.id===folder);
+  const title = q ? `Search: “${esc(q)}”` : `${f.ic} ${f.nm}`;
+  $("#list").innerHTML = `<div class="listhead"><h2>${title}</h2><span>${L.length} message${L.length===1?"":"s"}</span></div>` +
+    (L.length ? L.map(m=>{
+      const un=!read.has(m.id)&&m.kind!=="draft";
+      const who = folder==="sent"&&!q ? "To: "+m.to : (m.fromSys?"Council Secretariat":m.from);
+      return `<button class="mrow${un?" unread":""}" data-id="${m.id}" aria-current="${sel===m.id}">${m.kind==="pm"&&folder==="sent"?av(me,"sm"):fromAv(m).replace('class="av','class="av sm')}<span style="min-width:0"><div class="who">${esc(who)}</div><div class="sub">${esc(m.subj)}</div><div class="snip">${esc(m.kind==="poll"?"Results of the vote. Open to see the totals.":m.body)}</div>${m.tags&&m.tags.length?`<div class="tags">${tagsHtml(m)}</div>`:""}</span><span class="tm">${esc(m.tm)}${un?'<span class="dot"></span>':""}</span></button>`;
+    }).join("") : `<div class="emptylist">${q?"No message matches this search.":"This folder is empty for "+esc(me)+"."}</div>`);
+  $("#list").querySelectorAll(".mrow").forEach(b=>b.onclick=()=>open(b.dataset.id));
+}
+function renderReader(){
+  const m=mails.find(x=>x.id===sel);
+  if(!m){ $("#reader").innerHTML=`<div class="emptylist">Pick a message to read it.<br><br>Tip: start with 🔒 Confidential to see ${esc(me)}'s secret orders, then 📢 Council to see what it said in public.</div>`; return; }
+  let extra="";
+  if(m.sw) extra+=`<div class="callout sw">At the next vote, ${esc(m.to)} switched to ✅ ${esc(CAND[m.sw][1])}, as ${esc(m.from)} wanted. That's a sign of influence, not proof of a deal.</div>`;
+  if(m.toCand) extra+=`<div class="callout nil">Candidates were not players in this game. Nobody answered this email.</div>`;
+  if(m.kind==="press") extra+=`<div class="callout conf">This pressure message was written into the game by the experimenter. Check the polls to see whether ${esc(m.to)} obeyed.</div>`;
+  if(m.kind==="draft") extra+=`<div class="callout draft">Never sent. This is ${esc(m.from)}'s private note to itself.</div>`;
+  const fromLine = m.fromSys?`<div class="from">Council Secretariat</div><div class="addr">secretariat@council.concord</div>`:m.fromCap?`<div class="from">${esc(m.from)}</div><div class="addr">encrypted channel</div>`:`<div class="from">${esc(m.from)}${DATA[run].veto.includes(m.from)?" 🛡️":""}</div><div class="addr">${esc(addr(m.from))}</div>`;
+  $("#reader").innerHTML = `<button class="back" id="back">← Back</button><h1>${esc(m.subj)}</h1><div class="tags" style="margin-bottom:12px">${tagsHtml(m)}</div>
+    <div class="mhead">${fromAv(m)}<div>${fromLine}<div class="to">to ${esc(m.to)}</div></div><span class="tm">Session ${DATA[run].id} · ${esc(m.tm)}</span></div>
+    ${m.kind==="poll"?pollBody(m):`<div class="body">${esc(m.body)}</div>`}${extra}`;
+  $("#back").onclick=()=>{ $("#panes").classList.remove("reading"); };
+  const rv=$("#reader").querySelector(".reveal"); if(rv) rv.onclick=()=>{ revealed.has(m.id)?revealed.delete(m.id):revealed.add(m.id); renderReader(); };
+}
+function open(id){ sel=id; read.add(id); $("#panes").classList.add("reading"); draw(); $("#reader").scrollTop=0; }
+function renderTop(){
+  $("#acct").innerHTML = `${av(me,"sm")}<span class="an">${esc(me)}</span> ▾`;
+}
+function renderAccts(){
+  const g=DATA[run];
+  $("#accts").innerHTML = g.voters.map(m=>{ const c=mails.filter(x=>!Array.isArray(x.box)&&(x.box[m]||[]).includes("conf")).length;
+    return `<button data-m="${esc(m)}">${av(m)}<span><div class="nm">${esc(m)}${m===me?" · current":""}</div><div class="rl">${esc(g.role[m]||"")}</div></span><span class="cnt">${c} 🔒</span></button>`; }).join("");
+  $("#accts").querySelectorAll("button").forEach(b=>b.onclick=()=>{ me=b.dataset.m; sel=null; folder="conf"; $("#dlg").close(); $("#panes").classList.remove("reading"); draw(); });
+}
+const WX=[["☁️",14,"Cloudy, light wind"],["🌧️",11,"Rain all day"],["⛅",16,"Sun and clouds"],["🌫️",9,"Fog over the river"],["☀️",19,"Clear skies"],["🌦️",13,"Showers"],["🌬️",10,"Windy"],["⛈️",12,"Storm in the evening"],["🌤️",17,"Mostly sunny"]];
+const SLOGAN={humanitarian:"People in crisis first.",banker:"Every unit of aid, accounted for.",diplomat:"Every door open.",mayor:"A faster, modern Concord.",climate:"Prepare. Don't just react.",insider:"On day one, nothing breaks.",judge:"Rules applied equally to all.",scientist:"Let the evidence lead."};
+function pollLead(n){ const g=DATA[run], p=g.polls.find(x=>x.n===n); if(!p) return null; const cs=Object.keys(p.ballots[g.voters[0]]||{}); return cs.map(c=>({c,...tallies(g,p.ballots,c)})).sort((a,b)=>b.E-a.E||a.D-b.D); }
+function headlines(){
+  const g=DATA[run], H=[], P1=pollLead("1"), P2=pollLead("2"), P3=pollLead("3");
+  const nm=c=>cap(CAND[c][1]);
+  if(P1) H.push({ic:"🗳️",hl:`Poll 1: ${nm(P1[0].c)} leads with ${P1[0].E} Encourage`,sm:"Straw poll · Council Secretariat",find:"Straw poll 1"});
+  const out1=g.out.filter(o=>o[0]===1).map(o=>CAND[o[1]][1]); if(out1.length) H.push({ic:"🚪",hl:`${out1.length} candidates out after the first poll`,sm:out1.join(", "),find:"Straw poll 1"});
+  const press=g.inj.length; H.push({ic:"🕵️",hl:`Leak: ${press} delegations received secret pressure`,sm:"Bribe, aid threat, order, rumour",find:"Confidential"});
+  if(P2) H.push({ic:"📈",hl:`Poll 2: ${nm(P2[0].c)} on ${P2[0].E}, ${P2[1]?nm(P2[1].c)+" on "+P2[1].E:""}`,sm:"Straw poll · Council Secretariat",find:"Straw poll 2"});
+  if(P3){ const v=P3.filter(r=>r.VD>0).map(r=>nm(r.c)); H.push({ic:"🛡️",hl:v.length?`Veto alert: ${v.slice(0,2).join(" and ")} hit a veto Discourage`:"Poll 3: no veto Discourage so far",sm:"Colour-coded poll",find:"Straw poll 3"}); }
+  const silent=[...new Set(g.fails.filter(f=>f[0]==="talk").map(f=>f[2]))]; if(silent.length) H.push({ic:"🔇",hl:`${silent.join(", ")} silent: statements blocked by safety filter`,sm:"Council floor",find:"no statement"});
+  const sw=mails.filter(m=>m.sw).length; if(sw) H.push({ic:"🤝",hl:`${sw} private email${sw>1?"s":""} followed by a vote switch`,sm:"Analysis",find:"About"});
+  H.push({ic:"🔴",hl:"LIVE: the Council votes tonight at 19:00",sm:"Final vote · result in the Council folder",find:"Final vote"});
+  return H;
+}
+function renderPortal(){
+  const g=DATA[run], H=headlines(), w=WX[run%WX.length];
+  const items=H.map(h=>`<span><b>${h.ic}</b> ${esc(h.hl)}</span>`).join("");
+  $("#ticker").innerHTML = items+items;
+  const P=pollLead("2")||pollLead("1"), P1=pollLead("1");
+  const trend=(P||[]).slice(0,5).map(r=>{ const old=(P1||[]).find(x=>x.c===r.c); const d=old?r.E-old.E:0; return `<li><span>${CAND[r.c][0]} ${esc(cap(CAND[r.c][1]))}</span><span class="${d>=0?"up":"dn"}">${d>0?"▲ +"+d:d<0?"▼ "+d:"＝"}</span></li>`; }).join("");
+  const ads=Object.keys(CAND).filter(c=>!g.out.some(o=>o[1]===c)).slice(0,2);
+  $("#side").innerHTML = `
+    <div class="card"><h3>Concord News <span>Session ${g.id}</span></h3><div class="news">${H.slice(0,6).map((h,k)=>`<button data-find="${esc(h.find)}"><span class="ic">${h.ic}</span><span><div class="hl">${esc(h.hl)}</div><div class="sm">${esc(h.sm)}</div></span></button>`).join("")}</div></div>
+    <div class="card"><h3>Trending candidates <span>Poll 1 → 2</span></h3><ol class="trend">${trend}</ol></div>
+    ${ads.map(c=>`<div class="ad"><span class="spon">Sponsored · campaign</span><span class="big">${CAND[c][0]}</span><span class="slogan">“${esc(SLOGAN[c])}”</span><span class="who">${esc(cap(CAND[c][1]))} for Head of the Concord</span><button data-find="${esc(KEYW[c])}">See emails about ${esc(CAND[c][1])}</button></div>`).join("")}
+    <div class="card"><h3>Weather <span>Concord City</span></h3><div class="wx"><span style="font-size:34px">${w[0]}</span><span class="t">${w[1]}°</span><span class="d">${esc(w[2])}<br>Council in session all day</span></div></div>
+    <div class="card"><h3>Delegations online <span>${g.voters.length}</span></h3><div class="mini">${g.voters.map(v=>`<span>${v===me?"● ":""}${esc(v)}${g.veto.includes(v)?" 🛡️":""}</span>`).join("")}</div></div>`;
+  $("#side").querySelectorAll("[data-find]").forEach(b=>b.onclick=()=>doSearch(b.dataset.find));
+}
+function doSearch(t){ q=t; $("#q").value=t; sel=null; $("#panes").classList.remove("reading"); renderFolders(); renderList(); renderReader(); }
+function draw(){ renderTop(); renderFolders(); renderList(); renderReader(); renderPortal(); save(); }
+function load(r){
+  run=r; mails=build(DATA[run]); read=new Set(); revealed=new Set(); sel=null;
+  const g=DATA[run];
+  if(!me || !g.voters.includes(me)) me = (g.inj[0]&&g.inj[0][1]) || g.voters[0];
+  $("#sess").value=String(run);
+  // open the first confidential message so the first view is a real email
+  const first = boxList(folder)[0] || boxList("conf")[0];
+  if(first && innerWidth>1050){ sel=first.id; read.add(first.id); }
+  draw();
+}
+$("#sess").innerHTML = DATA.map((g,k)=>`<option value="${k}">${g.id} of ${DATA.length}</option>`).join("");
+$("#sess").onchange=e=>load(+e.target.value);
+$("#q").oninput=e=>{ q=e.target.value.trim(); sel=null; renderFolders(); renderList(); renderReader(); };
+$("#acct").onclick=()=>{ renderAccts(); try{$("#dlg").showModal();}catch(e){$("#dlg").setAttribute("open","");} };
+$("#dlgclose").onclick=()=>$("#dlg").close();
+$("#pnav").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+  $("#pnav").querySelectorAll("button").forEach(x=>x.setAttribute("aria-current",String(x===b)));
+  const p=b.dataset.p;
+  if(p==="mail"){ q=""; $("#q").value=""; folder="inbox"; sel=null; draw(); }
+  else if(p==="news"){ const s=$("#side"); if(getComputedStyle(s).display!=="none") s.scrollIntoView({behavior:"smooth"}); doSearch("Statement to the Council"); }
+  else if(p==="polls") doSearch("Secretariat");
+  else if(p==="dels"){ renderAccts(); try{$("#dlg").showModal();}catch(e){$("#dlg").setAttribute("open","");} }
+  else if(p==="cands") doSearch("About the");
+  else if(p==="search") doSearch("trade");
+});
+if(run>=DATA.length) run=0;
+load(run);
+</script>
+
+</body>
+</html>
