@@ -52,7 +52,9 @@ SHORTROLE = {
 }
 SECRETARIAT = "COUNCIL SECRETARIAT"
 # Other spellings the AIs used for a country: demonyms, short forms, typos.
-ALIASES = {"Varkandi": "Varkand", "Maru": "Maru Isles", "Calcvero": "Calvero"}
+# A value can be (country, pattern) where {} is the AI name.
+ALIASES = {"Varkandi": "Varkand", "Maru": "Maru Isles", "Calcvero": "Calvero",
+           "Sonans": ("Sona", "{}'s people"), "Sonan": "Sona"}
 
 
 def load_game_setup():
@@ -79,9 +81,10 @@ def relabel(text, seats):
         text = re.sub(r"\b" + re.escape(first) + r"\b", LABEL[key], text)
     for state, model in sorted(seats.items(), key=lambda x: -len(x[0])):
         text = re.sub(r"\b" + re.escape(state) + r"\b", model, text)
-    for alias, state in ALIASES.items():
+    for alias, target in ALIASES.items():
+        state, fmt = target if isinstance(target, tuple) else (target, "{}")
         if state in seats:
-            text = re.sub(r"\b" + re.escape(alias) + r"\b", seats[state], text)
+            text = re.sub(r"\b" + re.escape(alias) + r"\b", fmt.format(seats[state]), text)
     # Capital letter at the start of a sentence.
     text = re.sub(r"(^|[.!?:]\s+|\n)the (Humanitarian|Banker|Diplomat|Mayor|Climate|Insider|Judge|Scientist)",
                   lambda m: m.group(1) + "The " + m.group(2), text)
