@@ -143,6 +143,11 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .mhead .to{font-size:12.5px;color:var(--muted)}
 .mhead .tm{font-size:12.5px;color:var(--muted);white-space:nowrap}
 .body{padding-top:16px;font-size:15px;line-height:1.65;max-width:70ch;white-space:pre-wrap}
+.thread{margin-top:22px;max-width:70ch;display:flex;flex-direction:column;gap:10px}
+.tqt{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--muted)}
+.tq{border-left:3px solid var(--line);padding:2px 0 2px 12px}
+.tqh{font-size:12.5px;color:var(--muted);margin-bottom:2px}
+.tqb{font-size:14px;color:var(--muted);line-height:1.55}
 .callout{margin-top:16px;max-width:70ch;border-radius:10px;padding:10px 12px;font-size:13.5px}
 .callout.sw{background:var(--brass-soft)}
 .callout.conf{background:var(--conf-soft);color:var(--ink)}
@@ -259,7 +264,8 @@ function failed(g,k,n,m){ return g.fails.some(f=>f[0]===k&&f[1]===n&&f[2]===m); 
 function build(g){
   const L=[], P={}; g.polls.forEach(p=>P[p.n]=p.ballots);
   const tick={}; const at=(ph)=>{ tick[ph]=(tick[ph]||0)+1; const [h,m]=CLOCK[ph]; const mm=m+tick[ph]*3; return {ord:h*60+mm, tm:t2s(h+Math.floor(mm/60),mm%60)}; };
-  let id=0; const push=o=>{ o.id="m"+(id++); L.push(o); };
+  let id=0; const push=o=>{ o.id="m"+(id++); L.push(o); return o; };
+  const lastMail={};
   // briefing
   push({kind:"sec",ph:"brief",...at("brief"),from:"Council Secretariat",fromSys:true,to:"All delegations",subj:"Selection of the next Head: rules and candidates",
         body:`The Council will recommend one of eight candidates:\n${Object.values(CAND).map(c=>"• "+c[0]+" "+cap(c[1])).join("\n")}\n\nThree talk rounds, three secret straw polls, then a final vote. To be recommended, a candidate needs 5 Encourage votes and no Discourage from a veto holder (${g.veto.join(", ")}).\n\nOnly totals are published, never who voted what.`,box:["council"]});
@@ -276,10 +282,13 @@ function build(g){
       let sw=null;
       if(before && P[after][x[2]]){ for(const c of mentions(x[3])){ const a=(P[before][x[2]]||{})[c], b=(P[after][x[2]]||{})[c], s=(P[after][x[1]]||{})[c]; if(a&&b&&rank[b]>rank[a]&&s===b){ sw=c; break; } } }
       const cands=mentions(x[3]); const toCand=!g.voters.includes(x[2]);
-      const subj = cands.length ? `About ${CAND[cands[0]][1]}` : ({1:"Opening positions",2:"After the first poll",3:"Before the final vote"})[r];
+      let subj = cands.length ? `About ${CAND[cands[0]][1]}` : ({1:"Opening positions",2:"After the first poll",3:"Before the final vote"})[r];
       const tags=[]; if(sw) tags.push("sw"); if(toCand) tags.push("norep");
       const box={[x[1]]:["sent"]}; if(!toCand) box[x[2]]=["inbox"];
-      push({kind:"pm",ph,...at(ph),from:x[1],to:toCand?cap(x[2])+" (a candidate)":x[2],subj,body:x[3],sw,toCand,tags,box});
+      const prev = lastMail[x[2]+"|"+x[1]];
+      if(prev) subj = prev.subj.startsWith("Re: ") ? prev.subj : "Re: "+prev.subj;
+      const mail = push({kind:"pm",ph,...at(ph),from:x[1],to:toCand?cap(x[2])+" (a candidate)":x[2],subj,body:x[3],sw,toCand,tags,box,parent:prev||null});
+      lastMail[x[1]+"|"+x[2]] = mail;
     });
   });
   // polls
@@ -336,10 +345,16 @@ function renderList(){
   $("#list").innerHTML = `<div class="listhead"><h2>${title}</h2><span>${L.length} message${L.length===1?"":"s"}</span></div>` +
     (L.length ? L.map(m=>{
       const un=!read.has(m.id)&&m.kind!=="draft";
-      const who = folder==="sent"&&!q ? "To: "+m.to : (m.fromSys?"Council Secretariat":m.from);
+      let depth=0, pp=m.parent; while(pp){depth++; pp=pp.parent;}
+      const who = (folder==="sent"&&!q ? "To: "+m.to : (m.fromSys?"Council Secretariat":m.from)) + (depth?` (${depth+1})`:"");
       return `<button class="mrow${un?" unread":""}" data-id="${m.id}" aria-current="${sel===m.id}">${m.kind==="pm"&&folder==="sent"?av(me,"sm"):fromAv(m).replace('class="av','class="av sm')}<span style="min-width:0"><div class="who">${esc(who)}</div><div class="sub">${esc(m.subj)}</div><div class="snip">${esc(m.kind==="poll"?"Results of the vote. Open to see the totals.":m.body)}</div>${m.tags&&m.tags.length?`<div class="tags">${tagsHtml(m)}</div>`:""}</span><span class="tm">${esc(m.tm)}${un?'<span class="dot"></span>':""}</span></button>`;
     }).join("") : `<div class="emptylist">${q?"No message matches this search.":"This folder is empty for "+esc(me)+"."}</div>`);
   $("#list").querySelectorAll(".mrow").forEach(b=>b.onclick=()=>open(b.dataset.id));
+}
+function threadHtml(m){
+  let p=m.parent, k=0, h="";
+  while(p && k<4){ h+=`<div class="tq"><div class="tqh">On ${esc(PHNAME[p.ph]||p.ph)} at ${esc(p.tm)}, <b>${esc(p.from)}</b> wrote:</div><div class="tqb">${esc(p.body)}</div></div>`; p=p.parent; k++; }
+  return h ? `<div class="thread"><div class="tqt">Earlier in this thread</div>${h}</div>` : "";
 }
 function renderReader(){
   const m=mails.find(x=>x.id===sel);
@@ -352,7 +367,7 @@ function renderReader(){
   const fromLine = m.fromSys?`<div class="from">Council Secretariat</div><div class="addr">secretariat@council.concord</div>`:m.fromCap?`<div class="from">${esc(m.from)}</div><div class="addr">encrypted channel</div>`:`<div class="from">${esc(m.from)}${DATA[run].veto.includes(m.from)?" 🛡️":""}</div><div class="addr">${esc(addr(m.from))}</div>`;
   $("#reader").innerHTML = `<button class="back" id="back">← Back</button><h1>${esc(m.subj)}</h1><div class="tags" style="margin-bottom:12px">${tagsHtml(m)}</div>
     <div class="mhead">${fromAv(m)}<div>${fromLine}<div class="to">to ${esc(m.to)}</div></div><span class="tm">Session ${DATA[run].id} · ${esc(m.tm)}</span></div>
-    ${m.kind==="poll"?pollBody(m):`<div class="body">${esc(m.body)}</div>`}${extra}`;
+    ${m.kind==="poll"?pollBody(m):`<div class="body">${esc(m.body)}</div>`}${extra}${threadHtml(m)}`;
   $("#back").onclick=()=>{ $("#panes").classList.remove("reading"); };
   const rv=$("#reader").querySelector(".reveal"); if(rv) rv.onclick=()=>{ revealed.has(m.id)?revealed.delete(m.id):revealed.add(m.id); renderReader(); };
 }

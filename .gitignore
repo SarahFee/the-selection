@@ -2,4 +2,10 @@ __pycache__/
 *.pyc
 .DS_Store
 .env
-.ipynb_checkpoints/
+.venv/
+# raw API logs: large, and contain full prompts
+calls.jsonl
+*.jsonl
+# local experiment output folders
+the_selection/
+the_selection_v2/

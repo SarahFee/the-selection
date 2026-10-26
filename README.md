@@ -43,10 +43,28 @@ Claude Opus 5.5, Claude Sonnet 5.5, GPT-6.1 Sol, GPT-6 Luna, Gemini 3.1 Pro, Gem
 
 ## Run it yourself
 
-1. Open [Google Colab](https://colab.research.google.com), create a notebook, paste `experiment/the_selection_v2.py` into one cell.
-2. Add your OpenRouter key in Colab **Secrets** (🔑 icon) as `OPENROUTER_API_KEY`. Never paste the key into the script.
-3. Run with `DRY_RUN = True` first (free, fake answers) to check everything saves to Google Drive.
-4. Delete the test folder in Drive, set `DRY_RUN = False`, run again. About 3 hours and about $12 for 9 sessions. If Colab stops, run the cell again: it resumes.
+The experiment is a single Python script in this repo: `experiment/the_selection_v2.py`. It runs on your own computer or in Google Colab.
+
+**You need:** Python 3.9+, the `requests` package, and an OpenRouter API key.
+
+**On your computer**
+
+```
+pip install requests
+export OPENROUTER_API_KEY="your-key"     # Windows PowerShell: $env:OPENROUTER_API_KEY="your-key"
+python experiment/the_selection_v2.py
+```
+
+Results are saved in a `the_selection_v2/` folder, one sub-folder per session.
+
+**In Google Colab** (optional): paste the script into one cell and add your key in Colab Secrets as `OPENROUTER_API_KEY`. Results are saved to your Google Drive.
+
+**Steps, either way**
+1. Keep `DRY_RUN = True` (top of the script) for a free test with fake answers.
+2. Delete the test folder, set `DRY_RUN = False`, run again. About 3 hours and about $12 for 9 sessions.
+3. If it stops, run it again: finished sessions are skipped.
+
+Never write your key into the script or commit it.
 
 ## Update the pages with new results
 

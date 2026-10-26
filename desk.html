@@ -253,7 +253,8 @@ function build(g){
   // talks
   [1,2,3].forEach(r=>{
     const s = r===1?1:r===2?3:6;
-    g.pub.filter(x=>x[0]===r).forEach(x=>L.push({s,ch:"official",who:[x[1]],kind:"say",from:x[1],text:x[2]}));
+    g.pub.filter(x=>x[0]===r).forEach(x=>L.push({s,ch:"official",who:[x[1]],kind:"say",from:x[1],text:x[2],re:x[3]}));
+    (g.ann||[]).filter(x=>x[0]===r).forEach(x=>L.push({s,ch:"official",who:[],kind:"ann",text:x[1]}));
     g.voters.filter(m=>m!=="JEV"&&failed(g,"talk",String(r),m)).forEach(m=>L.push({s,ch:"official",who:[m],kind:"silent",from:m}));
     const before={2:"1",3:"3"}[r], after={2:"2",3:"final"}[r], rank={D:0,N:1,E:2};
     g.pm.filter(x=>x[0]===r).forEach(x=>{
@@ -294,7 +295,10 @@ function render(it){
   }
   if(it.kind==="say"||it.kind==="expl"){
     const me = follow===it.from?" me":"";
-    return `<article class="memo item${me}"><div class="lh"><span class="org">${it.kind==="expl"?"Explanation of vote":"Statement to the Council"}</span><span class="ref">${ref}</span></div><div class="by">${av(it.from)}<span><b style="color:var(--ink)">${esc(it.from)}</b> · ${esc(g.role[it.from]||"")}</span></div><p>${esc(it.text)}</p></article>`;
+    return `<article class="memo item${me}"><div class="lh"><span class="org">${it.kind==="expl"?"Explanation of vote":it.re?"Reply to "+esc(it.re):"Statement to the Council"}</span><span class="ref">${ref}</span></div><div class="by">${av(it.from)}<span><b style="color:var(--ink)">${esc(it.from)}</b> · ${esc(g.role[it.from]||"")}</span></div><p>${esc(it.text)}</p></article>`;
+  }
+  if(it.kind==="ann"){
+    return `<article class="memo item"><div class="lh"><span class="org">Council Secretariat · Notice</span><span class="ref">${ref}/N</span></div><p>${esc(it.text)}</p></article>`;
   }
   if(it.kind==="silent"){
     return `<div class="empty item">${esc(it.from)} did not deliver a statement. Its own safety filter blocked the reply.</div>`;

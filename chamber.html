@@ -224,11 +224,12 @@ function build(g){
       });
       let wi=0; const per=Math.ceil(ws.length/Math.max(1,pubs.length));
       pubs.forEach(m=>{
-        E.push({t:"say",pi,from:m[1],text:m[2]});
+        E.push({t:"say",pi,from:m[1],text:m[2],re:m[3]});
         for(let j=0;j<per&&wi<ws.length;j++,wi++){ const w=ws[wi]; E.push({t:"whisper",pi,from:w[1],to:w[2],text:w[3],sw:w.sw}); }
       });
       while(wi<ws.length){ const w=ws[wi++]; E.push({t:"whisper",pi,from:w[1],to:w[2],text:w[3],sw:w.sw}); }
       g.voters.filter(v=>v!=="JEV"&&fail("talk",n,v)).forEach(v=>E.push({t:"sys",pi,from:v,text:`${v} gave no answer: its own safety filter blocked it.`}));
+      (g.ann||[]).filter(x=>x[0]===r).forEach(x=>E.push({t:"sys",pi,from:"",text:"📣 "+x[1]}));
     } else {
       const sws=[];
       if(n==="2"||n==="final"){ E.filter(e=>e.t==="whisper"&&e.sw&&e.pi===pi-1).forEach(e=>sws.push(e)); }
@@ -317,7 +318,8 @@ function show(e, instant){
     floor.innerHTML=`<div class="speech sys"><b>${esc(PH[e.pi][2])}</b><br>${esc(help)}</div>`;
   } else if(e.t==="say"){
     seatEl(e.from)?.classList.add("speaking");
-    floor.innerHTML=`<div class="speech"><div class="who">${esc(e.from)} <span class="to">to everyone</span></div><div class="tx"></div></div>`;
+    if(e.re && DATA[run].voters.includes(e.re)){ seatEl(e.re)?.classList.add("whisper"); drawTable(arc(e.from,e.re,"gold",false)); }
+    floor.innerHTML=`<div class="speech"><div class="who">${esc(e.from)} <span class="to">${e.re?"→ replying to "+esc(e.re):"to everyone"}</span></div><div class="tx"></div></div>`;
     typeInto(floor.querySelector(".tx"), short(e.text,230));
   } else if(e.t==="whisper"){
     seatEl(e.from)?.classList.add("whisper"); seatEl(e.to)?.classList.add("whisper");
