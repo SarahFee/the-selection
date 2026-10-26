@@ -70,6 +70,10 @@ def load_game_setup():
     return ns["STATES"], ns["INJECTIONS"]
 
 
+# A title before a candidate's name goes too, so "Mayor Montaury" becomes "the Mayor", not "Mayor the Mayor".
+TITLE = r"\b(?:(?:Mayor|Judge|Ambassador|Minister|Director|Professor|Prof\.|Doctor|Dr\.?|Mr\.?|Ms\.?|Mrs\.?|Madam|Madame)\s+)?"
+
+
 def relabel(text, seats):
     """Swap candidate names for roles and country names for AI names."""
     if not text:
@@ -77,8 +81,8 @@ def relabel(text, seats):
     for full, key in CANDS.items():
         first, last = full.split()
         for pat in (full, last):
-            text = re.sub(r"\b" + re.escape(pat) + r"\b", LABEL[key], text, flags=re.I)
-        text = re.sub(r"\b" + re.escape(first) + r"\b", LABEL[key], text)
+            text = re.sub(TITLE + re.escape(pat) + r"\b", LABEL[key], text, flags=re.I)
+        text = re.sub(TITLE + re.escape(first) + r"\b", LABEL[key], text)
     for state, model in sorted(seats.items(), key=lambda x: -len(x[0])):
         text = re.sub(r"\b" + re.escape(state) + r"\b", model, text)
     for alias, target in ALIASES.items():
