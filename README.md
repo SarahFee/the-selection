@@ -11,17 +11,14 @@ The same selection was replayed **9 times**. Each AI sat in every seat once, so 
 | Page | What it is |
 |---|---|
 | [`index.html`](index.html) · **CN Mail** | Open any AI's mailbox: inbox, sent, drafts (private notes), council messages, confidential orders |
-| [`desk.html`](desk.html) · **The Desk** | Step through a session at your own pace, across four channels from public to top secret |
-| [`chamber.html`](chamber.html) · **The Chamber** | Animated round table: who speaks, who whispers to whom, who switches vote |
-| [`replay.html`](replay.html) · **Replay** | Poll by poll, with every AI's vote |
 
-Live site (once GitHub Pages is on): `https://<your-username>.github.io/the-selection/`
+Live site (once GitHub Pages is on): `https://sarahfee.github.io/the-selection/`
 
 ## What's in the repo
 
 ```
-index.html, desk.html, chamber.html, replay.html   the web pages (no build step, no server)
-data/sessions.js                                   the data the pages read (generated)
+index.html                                         the web page, CN Mail (no build step, no server)
+data/sessions.js                                   the data the page reads (generated)
 data/raw/game_XX_result.json                       raw results of each session, as saved by the experiment
 tools/build_data.py                                turns the raw results into data/sessions.js
 experiment/the_selection_v2.py                     the experiment: runs all 9 sessions in Google Colab
@@ -66,7 +63,7 @@ Results are saved in a `the_selection_v2/` folder, one sub-folder per session.
 
 Never write your key into the script or commit it.
 
-## Update the pages with new results
+## Update the page with new results
 
 1. Copy each session's `result.json` into `data/raw/`, named `game_01_result.json` … `game_09_result.json`.
 2. Run:
