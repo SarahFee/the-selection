@@ -84,3 +84,5 @@ Repo **Settings → Pages → Build and deployment → Deploy from a branch → 
 - Claude Opus was blocked by its own safety filter on some turns; those are marked "no answer".
 - The AIs were instructed to serve their country's interests. Their behaviour reflects those instructions as much as the models themselves.
 - "Vote switched after this email" means the receiver changed its vote toward the sender's pick at the next poll. That's a sign of influence, not proof.
+
+Licence: MIT
