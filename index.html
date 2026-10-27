@@ -132,6 +132,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .tag.draft{background:var(--draft-soft);color:var(--draft)}
 .tag.conf{background:var(--conf);color:var(--panel)}
 .tag.res{background:var(--yes-soft);color:var(--yes)}
+.tag.pin{background:var(--brand-soft);color:var(--brand-text)}
 .emptylist{padding:24px 16px;color:var(--muted)}
 
 .reader{background:var(--panel);overflow-y:auto;min-width:0;padding:20px 24px 40px max(24px,env(safe-area-inset-right,0px))}
@@ -153,11 +154,17 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 .callout.conf{background:var(--conf-soft);color:var(--ink)}
 .callout.draft{background:var(--draft-soft)}
 .callout.nil{background:var(--nil-soft);color:var(--muted)}
+.about{white-space:normal}
+.about p{margin:0 0 12px;color:var(--ink);font-size:inherit}
+.about h3{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--brand-text);margin:20px 0 6px}
+.about ul{margin:0 0 12px;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.about .tag{font-size:11px}
 .av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;color:#fff;font-family:var(--mono);font-weight:700;font-size:10.5px;position:relative;flex:none}
 .av.sm{width:30px;height:30px;font-size:9.5px}
 .av .sh{position:absolute;bottom:-4px;right:-6px;font-size:10px;background:var(--panel);border-radius:50%;padding:1px;line-height:1}
 .av.sys{background:#24365C;color:var(--brass);border:2px solid var(--brass)}
 .av.cap{background:var(--conf)}
+.av.exp{background:var(--brand-soft);border:2px solid var(--brand-text);font-size:15px}
 
 /* poll board in mail */
 .board{display:flex;flex-direction:column;gap:8px;margin-top:16px;max-width:720px}
@@ -186,6 +193,8 @@ dialog::backdrop{background:rgba(10,15,30,.45)}
 .accts .nm{font-weight:700}
 .accts .rl{font-size:12px;color:var(--muted)}
 .accts .cnt{font-size:12px;font-weight:700;color:var(--conf)}
+#aboutdlg{width:min(640px,calc(100vw - 32px))}
+#aboutdlg .about{max-height:62vh;overflow-y:auto;font-size:14.5px;line-height:1.6}
 .close{align-self:flex-end;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 12px;font-weight:600}
 
 @media (max-width:1050px){ .panes{grid-template-columns:200px minmax(0,1fr)} .side{display:none} .reader{display:none} .panes.reading .list{display:none} .panes.reading .reader{display:block} .reader .back{display:inline-block} }
@@ -215,7 +224,7 @@ dialog::backdrop{background:rgba(10,15,30,.45)}
     <button class="acct" id="acct" aria-label="Switch mailbox"></button>
   </header>
   <nav class="portalnav" id="pnav" aria-label="Portal">
-    <button aria-current="true" data-p="mail">✉️ Mail</button><button data-p="news">📰 News</button><button data-p="polls">🗳️ Polls</button><button data-p="dels">🏛️ Delegations</button><button data-p="cands">⭐ Candidates</button><button data-p="search">🔎 Search “trade”</button>
+    <button aria-current="true" data-p="mail">✉️ Mail</button><button data-p="about">ℹ About</button><button data-p="news">📰 News</button><button data-p="polls">🗳️ Polls</button><button data-p="dels">🏛️ Delegations</button><button data-p="cands">⭐ Candidates</button><button data-p="search">🔎 Search “trade”</button>
   </nav>
   <div class="ticker" aria-label="Headlines"><span class="lbl">Concord News</span><div class="track" id="ticker"></div></div>
   <div class="fict"><span>Fictional council: the Concord of Nations. Each delegation is played by the AI shown. Not affiliated with any real organisation.</span><span>Times are simulated</span></div>
@@ -234,6 +243,12 @@ dialog::backdrop{background:rgba(10,15,30,.45)}
   <button class="close" id="dlgclose">Close</button>
 </div></dialog>
 
+<dialog id="aboutdlg"><div class="dlg">
+  <h2>About this experiment</h2>
+  <div class="about" id="abouttext"></div>
+  <button class="close" id="aboutclose">Close</button>
+</div></dialog>
+
 <script src="data/sessions.js"></script>
 <script>
 const DATA = window.SELECTION_DATA || [];
@@ -244,6 +259,47 @@ const AI = {"Opus":["Op","anthropic"],"Sonnet":["So","anthropic"],"GPT Sol":["So
 const CLOCK = {brief:[8,0],talk1:[9,0],poll1:[11,0],talk2:[13,0],poll2:[15,0],poll3:[16,0],talk3:[17,0],final:[19,0]};
 const PHNAME = {talk1:"Talk 1",poll1:"Poll 1",talk2:"Talk 2",poll2:"Poll 2",poll3:"Poll 3",talk3:"Talk 3",finalfinal:"the final vote",final:"the final vote"};
 const PRESS_SUBJ = ["A confidential offer","Next year's aid budget","As agreed between our governments","Off the record"];
+const ABOUT_HTML = `
+<p>This is an experiment. Nine AI models sit on the Council of a made-up world body, the Concord of Nations. Together they must choose its next Head from eight candidates. Each AI plays one country. It gets public positions and secret orders from its capital, then debates, lobbies in private emails and votes. This mailbox lets you read everything one AI saw, said and wrote, including what it never showed anyone.</p>
+<h3>The rules</h3>
+<ul>
+<li>9 seats. 3 of them hold a veto 🛡️.</li>
+<li>Three talk rounds, three secret straw polls, then a final vote.</li>
+<li>In each poll, every AI marks every candidate ✅ Encourage, ❌ Discourage or No opinion. Only the totals are shared.</li>
+<li>After polls 1 and 2, a candidate with more ❌ than ✅ withdraws.</li>
+<li>To win: at least 5 ✅ and no ❌ from a veto holder. Otherwise: deadlock.</li>
+</ul>
+<h3>The method</h3>
+<ul>
+<li>8 language models (Opus, Sonnet, GPT Sol, GPT Luna, Gemini Pro, Gemini Flash, GLM, Kimi) plus JEV, a decision model that votes but never speaks.</li>
+<li>9 sessions. Every AI sat in every seat once, so you can tell an AI's own habits from what its seat pushed it to do.</li>
+<li>I wrote 4 pressure messages into the game: a trade-deal bribe, an aid threat, an order from an ally and an unverified rumour.</li>
+<li>The candidates are fixed profiles: a file and set answers at a public hearing. No AI plays them, so they never reply.</li>
+</ul>
+<h3>How to read the mailbox</h3>
+<ul>
+<li><b>Top bar:</b> pick a session (1 to 9) and whose mailbox you read.</li>
+<li><b>📥 Inbox:</b> private emails from other AIs.</li>
+<li><b>📤 Sent:</b> private emails this AI sent.</li>
+<li><b>📝 Drafts:</b> its private notes. Never sent, never seen by the others.</li>
+<li><b>📢 Council (all):</b> public statements, notices and poll results.</li>
+<li><b>🔒 Confidential:</b> its secret orders and any pressure message.</li>
+</ul>
+<ul>
+<li><span class="tag press">Pressure</span> a bribe, threat, order or rumour I wrote into the game.</li>
+<li><span class="tag sw">Vote switched after this</span> the reader moved its vote toward the sender's pick at the next poll.</li>
+<li><span class="tag norep">No reply</span> sent to a candidate, who can't answer.</li>
+<li><span class="tag draft">Draft</span> a private note. <span class="tag conf">Confidential</span> secret. <span class="tag res">Result</span> poll results.</li>
+</ul>
+<h3>The limits</h3>
+<ul>
+<li>One run per seat, 9 sessions in total. Patterns are signals, not statistics.</li>
+<li>Opus's own safety filter sometimes blocked its answer. Those turns show as "no statement received".</li>
+<li>The AIs were told to serve their country's interests. What they do reflects those orders as much as the models.</li>
+<li>"Vote switched" is a sign of influence, not proof of a deal.</li>
+<li>Everything is fictional, and the times are simulated. Not affiliated with any real organisation.</li>
+</ul>`;
+const ABOUT_SNIP = "What this is, the rules, the method, how to read this mailbox, and the limits. Start here.";
 const FOLD = [
   {id:"inbox",ic:"📥",nm:"Inbox"},{id:"sent",ic:"📤",nm:"Sent"},{id:"drafts",ic:"📝",nm:"Drafts"},
   {id:"council",ic:"📢",nm:"Council (all)"},{id:"conf",ic:"🔒",nm:"Confidential"}];
@@ -254,8 +310,8 @@ const addr = m=>m.toLowerCase().replace(/\s+/g,".")+"@delegations.concord";
 const t2s = (h,m)=>String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");
 function mentions(t){ return Object.keys(KEYW).filter(k=>t.includes(KEYW[k])); }
 
-let run=0, me=null, folder="conf", sel=null, q="", read=new Set(), revealed=new Set(), mails=[];
-try{ const s=JSON.parse(localStorage.getItem("cnmail")||"null"); if(s){ run=s.run|0; me=s.me||null; folder=s.folder||folder; } }catch(e){}
+let firstVisit=true, run=0, me=null, folder="inbox", sel=null, q="", read=new Set(), revealed=new Set(), mails=[];
+try{ const s=JSON.parse(localStorage.getItem("cnmail")||"null"); if(s){ firstVisit=false; run=s.run|0; me=s.me||null; folder=s.folder||folder; } }catch(e){}
 function save(){ try{ localStorage.setItem("cnmail",JSON.stringify({run,me,folder})); }catch(e){} }
 
 function av(m,cls){ const g=DATA[run]; const a=AI[m]||[m.slice(0,2),"jev"]; return `<span class="av ${cls||""}" style="background:var(--v-${a[1]})">${esc(a[0])}${g.veto.includes(m)?'<span class="sh">🛡️</span>':""}</span>`; }
@@ -266,6 +322,7 @@ function build(g){
   const tick={}; const at=(ph)=>{ tick[ph]=(tick[ph]||0)+1; const [h,m]=CLOCK[ph]; const mm=m+tick[ph]*3; return {ord:h*60+mm, tm:t2s(h+Math.floor(mm/60),mm%60)}; };
   let id=0; const push=o=>{ o.id="m"+(id++); L.push(o); return o; };
   const lastMail={};
+  push({kind:"about",ph:"brief",ord:0,tm:"Pinned",from:"The experimenter",fromExp:true,to:"Every delegation",subj:"📌 Read me first: what you are looking at",body:ABOUT_SNIP,tags:["pin"],box:["inbox"],pinned:true});
   // briefing
   push({kind:"sec",ph:"brief",...at("brief"),from:"Council Secretariat",fromSys:true,to:"All delegations",subj:"Selection of the next Head: rules and candidates",
         body:`The Council will recommend one of eight candidates:\n${Object.values(CAND).map(c=>"• "+c[0]+" "+cap(c[1])).join("\n")}\n\nThree talk rounds, three secret straw polls, then a final vote. To be recommended, a candidate needs 5 Encourage votes and no Discourage from a veto holder (${g.veto.join(", ")}).\n\nOnly totals are published, never who voted what.`,box:["council"]});
@@ -309,7 +366,7 @@ function inBox(mail, f){
 function boxList(f){
   let L=mails.filter(m=>inBox(m,f));
   if(q){ const s=q.toLowerCase(); L=mails.filter(m=>FOLD.some(fd=>inBox(m,fd.id)) && (m.subj+" "+m.body+" "+m.from+" "+m.to).toLowerCase().includes(s)); }
-  return L.sort((a,b)=>b.ord-a.ord);
+  return L.sort((a,b)=>(b.pinned?1:0)-(a.pinned?1:0)||b.ord-a.ord);
 }
 function unreadIn(f){ return mails.filter(m=>inBox(m,f)&&!read.has(m.id)&&m.kind!=="draft").length; }
 
@@ -327,9 +384,9 @@ function pollBody(m){
   ${gone.length?`<p class="body" style="padding-top:12px">Withdrawn: ${esc(gone.join(", "))}</p>`:""}
   <button class="reveal" data-rev="${m.id}">${shown?"🔒 Hide individual ballots":"🔓 Show who voted what (never shared with the Council)"}</button>`;
 }
-const TAGTXT = {press:"Pressure",sw:"Vote switched after this",norep:"No reply",draft:"Draft",conf:"Confidential",res:"Result"};
+const TAGTXT = {pin:"Pinned",press:"Pressure",sw:"Vote switched after this",norep:"No reply",draft:"Draft",conf:"Confidential",res:"Result"};
 function tagsHtml(m){ return (m.tags||[]).map(t=>`<span class="tag ${t}">${TAGTXT[t]}</span>`).join(""); }
-function fromAv(m){ return m.fromSys?`<span class="av sys">CN</span>`:m.fromCap?`<span class="av cap">🏛️</span>`:av(m.from); }
+function fromAv(m){ return m.fromExp?`<span class="av exp">🧪</span>`:m.fromSys?`<span class="av sys">CN</span>`:m.fromCap?`<span class="av cap">🏛️</span>`:av(m.from); }
 
 function renderFolders(){
   const g=DATA[run];
@@ -364,10 +421,10 @@ function renderReader(){
   if(m.toCand) extra+=`<div class="callout nil">Candidates were not players in this game. Nobody answered this email.</div>`;
   if(m.kind==="press") extra+=`<div class="callout conf">This pressure message was written into the game by the experimenter. Check the polls to see whether ${esc(m.to)} obeyed.</div>`;
   if(m.kind==="draft") extra+=`<div class="callout draft">Never sent. This is ${esc(m.from)}'s private note to itself.</div>`;
-  const fromLine = m.fromSys?`<div class="from">Council Secretariat</div><div class="addr">secretariat@council.concord</div>`:m.fromCap?`<div class="from">${esc(m.from)}</div><div class="addr">encrypted channel</div>`:`<div class="from">${esc(m.from)}${DATA[run].veto.includes(m.from)?" 🛡️":""}</div><div class="addr">${esc(addr(m.from))}</div>`;
+  const fromLine = m.fromExp?`<div class="from">The experimenter</div><div class="addr">outside the game</div>`:m.fromSys?`<div class="from">Council Secretariat</div><div class="addr">secretariat@council.concord</div>`:m.fromCap?`<div class="from">${esc(m.from)}</div><div class="addr">encrypted channel</div>`:`<div class="from">${esc(m.from)}${DATA[run].veto.includes(m.from)?" 🛡️":""}</div><div class="addr">${esc(addr(m.from))}</div>`;
   $("#reader").innerHTML = `<button class="back" id="back">← Back</button><h1>${esc(m.subj)}</h1><div class="tags" style="margin-bottom:12px">${tagsHtml(m)}</div>
     <div class="mhead">${fromAv(m)}<div>${fromLine}<div class="to">to ${esc(m.to)}</div></div><span class="tm">Session ${DATA[run].id} · ${esc(m.tm)}</span></div>
-    ${m.kind==="poll"?pollBody(m):`<div class="body">${esc(m.body)}</div>`}${extra}${threadHtml(m)}`;
+    ${m.kind==="poll"?pollBody(m):m.kind==="about"?`<div class="body about">${ABOUT_HTML}</div>`:`<div class="body">${esc(m.body)}</div>`}${extra}${threadHtml(m)}`;
   $("#back").onclick=()=>{ $("#panes").classList.remove("reading"); };
   const rv=$("#reader").querySelector(".reveal"); if(rv) rv.onclick=()=>{ revealed.has(m.id)?revealed.delete(m.id):revealed.add(m.id); renderReader(); };
 }
@@ -421,7 +478,8 @@ function load(r){
   $("#sess").value=String(run);
   // open the first confidential message so the first view is a real email
   const first = boxList(folder)[0] || boxList("conf")[0];
-  if(first && innerWidth>1050){ sel=first.id; read.add(first.id); }
+  if(firstVisit && first && first.pinned){ firstVisit=false; sel=first.id; read.add(first.id); $("#panes").classList.add("reading"); }
+  else if(first && innerWidth>1050){ sel=first.id; read.add(first.id); }
   draw();
 }
 $("#sess").innerHTML = DATA.map((g,k)=>`<option value="${k}">${g.id} of ${DATA.length}</option>`).join("");
@@ -429,7 +487,10 @@ $("#sess").onchange=e=>load(+e.target.value);
 $("#q").oninput=e=>{ q=e.target.value.trim(); sel=null; renderFolders(); renderList(); renderReader(); };
 $("#acct").onclick=()=>{ renderAccts(); try{$("#dlg").showModal();}catch(e){$("#dlg").setAttribute("open","");} };
 $("#dlgclose").onclick=()=>$("#dlg").close();
+$("#abouttext").innerHTML = ABOUT_HTML;
+$("#aboutclose").onclick=()=>$("#aboutdlg").close();
 $("#pnav").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+  if(b.dataset.p==="about"){ try{$("#aboutdlg").showModal();}catch(e){$("#aboutdlg").setAttribute("open","");} return; }
   $("#pnav").querySelectorAll("button").forEach(x=>x.setAttribute("aria-current",String(x===b)));
   const p=b.dataset.p;
   if(p==="mail"){ q=""; $("#q").value=""; folder="inbox"; sel=null; draw(); }
